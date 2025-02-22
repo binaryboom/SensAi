@@ -1,5 +1,6 @@
 import React from 'react'
 import { Button } from './components/ui/button'
+import 'regenerator-runtime/runtime'
 import Home from './components/ui/home'
 import Header from './components/ui/header'
 import Footer from './components/ui/footer'
@@ -15,6 +16,8 @@ import CultureFit from './components/interview/CultureFit'
 import CompatibilityCheck from './components/interview/CompatibilityCheck'
 import Compat2 from './components/interview/compat2'
 import Interview from './components/interview/Interview'
+import CodingPlayground from './components/interview/CodingPlayground'
+import Stt from './components/utils/stt'
 
 
 const App = () => {
@@ -37,6 +40,8 @@ const App = () => {
           <Route path='/modes/compatibility-check' element={<CompatibilityCheck />} />
           <Route path='/modes/c2' element={<Compat2 />} />
           <Route path='/interview' element={<Interview />} />
+          <Route path='/code' element={<CodingPlayground />} />
+          <Route path='/stt' element={<Stt />} />
         </Routes>
       </main>
       <Footer/>

@@ -12,11 +12,13 @@ import {
 // import {HashLoader} from 'react-spinners'
 import Loader from "../ui/loader";
 import StartBtn from "../ui/StartBtn";
+import { useNavigate } from "react-router";
 
 const ResumeInsight = () => {
     const [fileName, setFileName] = useState("");
     const [difficulty, setDifficulty] = useState("Easy");
     // const [progress, setProgress] = useState(0);
+    const navigate=useNavigate()
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -30,7 +32,7 @@ const ResumeInsight = () => {
     };
 
     const handleStartInterview = () => {
-        setProgress(100);
+        navigate('/modes/compatibility-check')
     };
 
     return (
@@ -86,19 +88,6 @@ const ResumeInsight = () => {
                             </SelectContent>
                         </Select>
                     </div>
-
-                    {/* Start Interview Button */}
-                    {/* <Button
-                        disabled={!fileName}
-                        className={`w-full md:w-[200px] py-3 text-xl font-semibold rounded-lg transition-all transform hover:scale-105 ${fileName
-                            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                            : "bg-gray-600 cursor-not-allowed text-gray-300"
-                            } `}
-                        onClick={handleStartInterview}
-                    >
-                        🚀
-                    </Button> */}
-
 
                     <StartBtn onClick={handleStartInterview} disabled={!fileName} text={'Start Interview'}/>
 

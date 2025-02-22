@@ -9,11 +9,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Loader from "../ui/loader";
+import { useNavigate } from "react-router";
 
 const CodeMastery = () => {
   const inputRef=useRef(null);
   const [difficulty, setDifficulty] = useState("Easy");
   const [skills, setSkills] = useState([]);
+  const navigate=useNavigate()
+
+  
 
   const handleAddSkill = (event) => {
     if (event.key === "Enter" || event.key === ",") {
@@ -45,6 +49,7 @@ const CodeMastery = () => {
   const handleStartInterview = () => {
     if (skills.length === 0) return; // Prevent starting without skills
     // Start interview logic here
+    navigate('/modes/compatibility-check')
   };
 
   return (

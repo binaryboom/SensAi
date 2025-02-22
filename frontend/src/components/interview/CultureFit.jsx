@@ -12,11 +12,18 @@ import {
 // import {HashLoader} from 'react-spinners'
 import Loader from "../ui/loader";
 import StartBtn from "../ui/StartBtn";
+import { useNavigate } from "react-router";
 
 const CultureFit = () => {
     const [fileName, setFileName] = useState("");
     const [difficulty, setDifficulty] = useState("Easy");
     // const [progress, setProgress] = useState(0);
+
+    const navigate=useNavigate()
+
+    const handleStartInterview = () => {
+      navigate('/modes/compatibility-check')
+    };
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -29,9 +36,7 @@ const CultureFit = () => {
         }
     };
 
-    const handleStartInterview = () => {
-        setProgress(100);
-    };
+   
 
     return (
         <section id="culture-fit" className="w-full py-12 md:py-24 bg-muted/50 pt-20 md:pt-32 scroll-mt-24">

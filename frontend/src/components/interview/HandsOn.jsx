@@ -15,9 +15,6 @@ const HandsOn = () => {
   const [difficulty, setDifficulty] = useState("Easy");
   const navigate=useNavigate()
 
-
-
-
   const handleStartInterview = () => {
     navigate('/modes/compatibility-check')
   };

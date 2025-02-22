@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import InterviewHeader from "./InterviewHeader";
 import StartBtn from "../ui/StartBtn";
+import { OctagonAlert } from 'lucide-react';
+import CodingPlayground from "./CodingPlayground";
+import { motion } from "framer-motion";
+import davidVideo from '/david-case.mp4'
+
 
 const Interview = () => {
   const videoRef = useRef(null); // User video
@@ -63,19 +68,24 @@ const Interview = () => {
         videoRef.current.srcObject = stream;
       }
       if (interviewerRef.current) {
-        interviewerRef.current.srcObject = stream;
+        interviewerRef.current.src = davidVideo;
+        interviewerRef.current.load();
+        interviewerRef.current.play();
       }
     } catch (error) {
       console.error("Error accessing webcam:", error);
     }
   };
 
-  
+
   return (
-    <div ref={containerRef} className="h-screen w-full bg-gray-900 flex flex-col text-white">
+    <div ref={containerRef} className="h-screen w-full  bg-black/50 flex flex-col text-white">
+      <div className="grid-background" />
       {!isFullScreen ? (
-        <div className="flex items-center justify-center h-full">
-          <StartBtn onClick={enterFullScreen} text="Start Interview (Fullscreen)" />
+        <div className="flex flex-col items-center justify-center h-full">
+          <h3 className="text-xl text-red-600  text-center font-semibold"> <OctagonAlert className="w-5 h-5 md:ml-2 inline" /> Warning: <br /> Full-Screen Mode Required</h3>
+          <p className="text-md text-center mt-8">To proceed with the interview, <br /> please enable full-screen mode.</p>
+          <StartBtn onClick={enterFullScreen} text="Start Interview" />
         </div>
       ) : (
         <>
@@ -87,12 +97,12 @@ const Interview = () => {
                 <video
                   ref={interviewerRef}
                   autoPlay
-                  muted
-                  className="w-[82%] h-[80%] border-2 border-gray-700 rounded-lg shadow-lg object-cover"
+
+                  className="w-[82%] h-[80%] border-2  border-gray-700 rounded-lg shadow-lg object-cover"
                 ></video>
 
                 <div className="absolute bottom-16 right-4 w-40 h-40 bg-black rounded-lg shadow-lg border-2 border-gray-700 overflow-hidden">
-                  <video ref={videoRef} autoPlay muted className="w-full h-full object-cover"></video>
+                  <video ref={videoRef} autoPlay className="w-full h-full object-cover"></video>
                 </div>
               </>
             )}
@@ -103,17 +113,32 @@ const Interview = () => {
                 <video
                   ref={interviewerRef}
                   autoPlay
-                  muted
+
                   className={`${isPC ? "w-1/2 h-full border-r-2" : "w-full h-1/2 border-b-2"} border-gray-700 object-cover`}
                 ></video>
                 <video
                   ref={videoRef}
                   autoPlay
-                  muted
+
                   className={`${isPC ? "w-1/2 h-full" : "w-full h-1/2"} object-cover`}
                 ></video>
               </div>
             )}
+
+            {layout === 3 && (
+              <>
+                <CodingPlayground />
+                <motion.div
+                  initial={{ x: 200, opacity: 0 }} // Start from right (off-screen)
+                  animate={{ x: 0, opacity: 1 }} // Animate to its final position
+                  transition={{ type: "tween", duration: 0.5 }} // Smooth animation
+                  className="absolute bottom-16 right-4 w-40 h-40 bg-black rounded-lg shadow-lg border-2 border-gray-700 overflow-hidden z-50"
+                >
+                  <video ref={interviewerRef} autoPlay className="w-full h-full object-cover"></video>
+                </motion.div>
+              </>
+            )}
+
           </div>
         </>
       )}
