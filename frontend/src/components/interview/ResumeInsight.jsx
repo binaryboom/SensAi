@@ -17,18 +17,44 @@ import { useNavigate } from "react-router";
 const ResumeInsight = () => {
     const [fileName, setFileName] = useState("");
     const [difficulty, setDifficulty] = useState("Easy");
+    const [fileBase64, setFileBase64] = useState(""); // State to store Base64
     // const [progress, setProgress] = useState(0);
     const navigate=useNavigate()
+    const api=import.meta.env.VITE_BACKEND_API;
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
         if (file) {
             setFileName(file.name);
-            // setProgress(33); // Set progress after file upload
+            convertToBase64(file);
         } else {
             setFileName("");
-            // setProgress(0);
+            setFileBase64(""); // Clear Base64 when no file is selected
         }
+    };
+
+    // Convert file to Base64
+    const convertToBase64 = (file) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file); // Read file as Data URL
+        reader.onload = async () => {
+            const base64=reader.result;
+            setFileBase64(base64); // Store Base64 string
+            // console.log("Base64:", base64); // Log Base64 output
+            const response = await fetch(`${api}/extract-text`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ base64 }),
+              });
+        
+              const data = await response.json();
+              console.log(data.message);
+        };
+        reader.onerror = (error) => {
+            console.error("Error converting file to Base64:", error);
+        };
     };
 
     const handleStartInterview = () => {
