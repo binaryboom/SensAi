@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Settings } from "lucide-react";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import Loader from "../ui/loader";
 import StartBtn from "../ui/StartBtn";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
+
 
 const CompatibilityCheck = () => {
     const [permissions, setPermissions] = useState({ mic: false, camera: false });
     const [loading, setLoading] = useState(true);
     const [isCompatible, setIsCompatible] = useState(true);
+    const location =useLocation()
     const navigate=useNavigate()
+
+    const userData=location.state || {};
+    console.log(userData);
 
     useEffect(() => {
         const checkCompatibility = () => {
@@ -27,7 +25,6 @@ const CompatibilityCheck = () => {
         const requestPermissions = async () => {
             try {
                 if (!checkCompatibility()) return;
-
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
                 setPermissions({ mic: true, camera: true });
                 stream.getTracks().forEach(track => track.stop()); // Stop the stream after checking
@@ -46,7 +43,7 @@ const CompatibilityCheck = () => {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
             setPermissions({ mic: true, camera: true });
             stream.getTracks().forEach(track => track.stop());
-            navigate('/interview');
+            navigate('/interview',{state:{userData}});
         } catch (error) {
             console.error("User denied permissions", error);
             alert("Please grant microphone and camera permissions to proceed.");

@@ -5,15 +5,30 @@ import { OctagonAlert } from 'lucide-react';
 import CodingPlayground from "./CodingPlayground";
 import { motion } from "framer-motion";
 import davidVideo from '/david-case.mp4'
+import { useLocation } from "react-router";
+import { resumeInsightMode, speakQue } from "./AiFunc";
+import Stt from "../utils/stt";
+
 
 
 const Interview = () => {
+  const location = useLocation();
   const videoRef = useRef(null); // User video
   const interviewerRef = useRef(null); // Interviewer video
   const containerRef = useRef(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isPC, setIsPC] = useState(window.innerWidth > 1024);
   const [layout, setLayout] = useState(1); // Default Layout 1
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const [aiQuestion, setAiQuestion] = useState("");
+  const [queType, setQueType] = useState("normal");
+  const [userResponse, setUserResponse] = useState("");
+  const userData = location.state.userData;
+  console.log('interview', userData)
+
+  const properties = {
+    setConversationHistory, setAiQuestion, userData, setQueType, setUserResponse
+  }
 
   useEffect(() => {
     const handleResize = () => {
@@ -25,6 +40,29 @@ const Interview = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  useEffect(() => {
+    async function startInterview() {
+      try {
+        await resumeInsightMode(userResponse, properties);
+      } catch (error) {
+        console.error("Error in startInterview:", error);
+      }
+    }
+    startInterview()
+  }, [userData,userResponse]);
+
+  // useEffect(() => {
+  //   // async function speakQue() {
+  //   //   try {
+  //   //     await speak(aiQuestion);
+  //   //   } catch (error) {
+  //   //     console.error("Error in speaking:", error);
+  //   //   }
+  //   // }
+  //   // startInterview()
+  //   speakQue(aiQuestion)
+  // }, [aiQuestion]);
 
   useEffect(() => {
     const handleFullScreenChange = () => {
@@ -92,23 +130,28 @@ const Interview = () => {
           <InterviewHeader exitFullScreen={exitFullScreen} layout={layout} setLayout={setLayout} />
 
           <div className="relative flex-grow flex items-center justify-center">
+            {userResponse.length <= 0 &&
+              <Stt setUserResponse={setUserResponse} />
+            }
             {layout === 1 && (
               <>
                 <video
                   ref={interviewerRef}
                   autoPlay
-
-                  className="w-[82%] h-[80%] border-2  border-gray-700 rounded-lg shadow-lg object-cover"
+                  muted={true}
+                  className="w-[90%] mt-8 h-[100%] border-2  border-gray-700 rounded-lg shadow-lg object-cover"
                 ></video>
+                {/* w-[82%] h-[80%]  without mt-8*/}
 
                 <div className="absolute bottom-16 right-4 w-40 h-40 bg-black rounded-lg shadow-lg border-2 border-gray-700 overflow-hidden">
-                  <video ref={videoRef} autoPlay className="w-full h-full object-cover"></video>
+                  <video muted={true} ref={videoRef} autoPlay className="w-full h-full object-cover"></video>
                 </div>
+                {/* bottom-16 */}
               </>
             )}
 
             {layout === 2 && (
-              <div className={`w-full h-full flex ${isPC ? "flex-row" : "flex-col"}`}>
+              <div className={`mt-[50px] w-full h-full flex ${isPC ? "flex-row" : "flex-col"}`}>
                 {/* Layout 2: Left-Right on PC, Top-Bottom on Mobile */}
                 <video
                   ref={interviewerRef}
@@ -125,7 +168,7 @@ const Interview = () => {
               </div>
             )}
 
-            {layout === 3 && (
+            {queType === 'coding' && (
               <>
                 <CodingPlayground />
                 <motion.div

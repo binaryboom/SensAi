@@ -14,12 +14,12 @@ if (!PUBLISHABLE_KEY) {
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-  <StrictMode>
+  {/* <StrictMode> */}
     <ClerkProvider appearance={{
         baseTheme: neobrutalism,
       }} publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
     <App />
     </ClerkProvider>
-  </StrictMode>
+  {/* </StrictMode> */}
   </BrowserRouter>
 )

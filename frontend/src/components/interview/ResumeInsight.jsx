@@ -18,7 +18,7 @@ const ResumeInsight = () => {
     const [fileName, setFileName] = useState("");
     const [difficulty, setDifficulty] = useState("Easy");
     const [fileBase64, setFileBase64] = useState(""); // State to store Base64
-    // const [progress, setProgress] = useState(0);
+    const [resume, setResume] = useState("");
     const navigate=useNavigate()
     const api=import.meta.env.VITE_BACKEND_API;
 
@@ -50,7 +50,8 @@ const ResumeInsight = () => {
               });
         
               const data = await response.json();
-              console.log(data.message);
+              setResume(data.message);
+            //   console.log(data.message);
         };
         reader.onerror = (error) => {
             console.error("Error converting file to Base64:", error);
@@ -58,7 +59,7 @@ const ResumeInsight = () => {
     };
 
     const handleStartInterview = () => {
-        navigate('/modes/compatibility-check')
+        navigate('/modes/compatibility-check',{ state: { name: "Raghav", level: difficulty ,mode:'Resume Insight',resume:resume } })
     };
 
     return (
