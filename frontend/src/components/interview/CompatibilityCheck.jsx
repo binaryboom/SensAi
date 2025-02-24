@@ -13,7 +13,7 @@ const CompatibilityCheck = () => {
     const navigate=useNavigate()
 
     const userData=location.state || {};
-    console.log(userData);
+    // console.log(userData);
 
     useEffect(() => {
         const checkCompatibility = () => {

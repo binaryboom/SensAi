@@ -9,17 +9,11 @@ import { motion } from "framer-motion";
 
 
 
-const CodingPlayground = ({codingQue,basicBoilderPlate}) => {
-  const [code, setCode] = useState(basicBoilderPlate);
+const CodingPlayground = ({codingQue,setCode,code}) => {
+  // const [code, setCode] = useState(codingQue.funcTemplate);
 
-  const codingQuestion = `Given an array of integers, return indices of the two numbers such that they add up to a specific target.
-
-  Example:
-  Input: nums = [2, 7, 11, 15], target = 9
-  Output: [0,1]
-  
-  Implement function:
-  function twoSum(nums, target) {}`;
+  const description = codingQue.description;
+  const testcase=codingQue.testcase;
 
   return (
     <motion.div
@@ -33,7 +27,9 @@ const CodingPlayground = ({codingQue,basicBoilderPlate}) => {
         <ResizablePanel>
           <div className="h-[90vh] p-6 overflow-auto border-r border-gray-700">
             <h2 className="text-2xl font-bold mb-4 gradient-title">Coding Question</h2>
-            <pre className="whitespace-pre-wrap text-gray-300 text-sm">{codingQuestion}</pre>
+            <pre className="whitespace-pre-wrap text-gray-300 text-sm">{description}</pre>
+            <h3 className="text-lg mt-4 font-bold mb-4 gradient-title">Test Cases</h3>
+            <pre className="whitespace-pre-wrap text-gray-300 text-sm">{testcase}</pre>
           </div>
         </ResizablePanel>
 
@@ -48,7 +44,7 @@ const CodingPlayground = ({codingQue,basicBoilderPlate}) => {
               theme="vs-dark"
               defaultLanguage="java"
               value={code}
-              onChange={(value) => setCode(value)}
+              onChange={(value) =>{ setCode(value)}}
             />
           </div>
         </ResizablePanel>

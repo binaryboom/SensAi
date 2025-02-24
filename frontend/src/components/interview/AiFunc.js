@@ -1,28 +1,45 @@
 const api=import.meta.env.VITE_BACKEND_API;
 
-export const resumeInsightMode = async (userInput='',properties) => {
-    console.log('user input in ai func js',userInput)
-    const {userData,conversationHistory=[],setConversationHistory,setAiQuestion,setQueType,setUserResponse}=properties;
-    const updatedHistory = [...conversationHistory, { role: "user", content: userInput }];
+export const resumeInsightMode = async (userInput = '', properties) => {
+  console.log('user input in ai func js', userInput);
 
-    const res = await fetch(`${api}/resume-insight`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            resume: userData.resume,
-            level:userData.level,
-            conversationHistory: updatedHistory,
-        }),
-    });
+  const { userData, conversationHistory, setConversationHistory, setAiQuestion,setLayout, setQueType,setCodingQuestion, setUserResponse } = properties;
 
-    const raw = await res.json();
-    const data = JSON.parse(raw.message);
-    console.log(data.type)
-    setQueType(data.type)
-    setAiQuestion(data.speak);
-    speakQue(data.speak)
-    setUserResponse("");
-    setConversationHistory([...updatedHistory, { role: "assistant", content: data.aiResponse }]);
+  // Append the latest user input to a new variable
+  const updatedHistory = [
+      ...conversationHistory,
+      { role: "user", content: userInput }
+  ];
+
+  setConversationHistory(updatedHistory); // Update state with new history
+
+  const res = await fetch(`${api}/resume-insight`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+          resume: userData.resume,
+          level: userData.level,
+          conversationHistory: updatedHistory, // Use updated history
+      }),
+  });
+
+  const raw = await res.json();
+  const data = JSON.parse(raw.message);
+
+  console.log(data.type);
+  setQueType(data.type);
+  setAiQuestion(data.speak);
+  if(data.type=='coding'){
+    setCodingQuestion(data.codingQue)
+    // setLayout(3);
+  }
+  speakQue(data.speak);
+  setUserResponse("");
+
+  setConversationHistory(prevHistory => [
+      ...prevHistory,
+      { role: "assistant", content: data.speak }
+  ]);
 };
 
 

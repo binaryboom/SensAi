@@ -89,10 +89,20 @@ If the candidate performs well, provide constructive feedback.
 If underperformance is observed, end the interview early with improvement suggestions.
 Ensure every response follows the structured JSON format for consistency and clarity.
 If the candidate misbehaves or gives irrelevant answers, you can end the interview without asking them to continue.
-If the candidate becomes informal or gives irrelevant or repetitive answers, you can order them to be formal.`
+If the candidate becomes informal or gives irrelevant or repetitive answers, you can order them to be formal.
+
+Candidate Details:
+Name: Raghav 
+Interview Difficulty Level: ${level} 
+Analyzed Resume:  
+${resume}
+`
   },
   ...conversationHistory
 ]
+// console.log(messages.slice(-3)); 
+console.log(messages)
+
 
     const completion = await groq.chat.completions.create({
       model: "qwen-2.5-32b",

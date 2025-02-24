@@ -21,13 +21,17 @@ const Interview = () => {
   const [layout, setLayout] = useState(1); // Default Layout 1
   const [conversationHistory, setConversationHistory] = useState([]);
   const [aiQuestion, setAiQuestion] = useState("");
+  const [codingQuestion, setCodingQuestion] = useState("");
+  const [code, setCode] = useState("");
   const [queType, setQueType] = useState("normal");
   const [userResponse, setUserResponse] = useState("");
   const userData = location.state.userData;
-  console.log('interview', userData)
+  const submitBtnRef=useRef();
+
+  // console.log('interview', userData)
 
   const properties = {
-    setConversationHistory, setAiQuestion, userData, setQueType, setUserResponse
+   conversationHistory, setConversationHistory, setAiQuestion, userData, setQueType,setCodingQuestion, setUserResponse,setLayout
   }
 
   useEffect(() => {
@@ -41,28 +45,44 @@ const Interview = () => {
     };
   }, []);
 
+  // useEffect(() => {
+  //   async function startInterview() {
+  //     try {
+  //       await resumeInsightMode(userResponse, properties);
+  //     } catch (error) {
+  //       console.error("Error in startInterview:", error);
+  //     }
+  //   }
+  //   startInterview()
+  // }, [userData,userResponse]);
+
   useEffect(() => {
+    // Run only when the page is opened (first render)
     async function startInterview() {
       try {
+        console.log('calling start interview')
         await resumeInsightMode(userResponse, properties);
       } catch (error) {
         console.error("Error in startInterview:", error);
       }
     }
-    startInterview()
-  }, [userData,userResponse]);
+    startInterview();
+  }, []); // Empty dependency array = runs only once on mount
+  
+  useEffect(() => {
+    if (userResponse.length > 0) {
+      async function continueInterview() {
+        try {
+          console.log('calling continue interview')
 
-  // useEffect(() => {
-  //   // async function speakQue() {
-  //   //   try {
-  //   //     await speak(aiQuestion);
-  //   //   } catch (error) {
-  //   //     console.error("Error in speaking:", error);
-  //   //   }
-  //   // }
-  //   // startInterview()
-  //   speakQue(aiQuestion)
-  // }, [aiQuestion]);
+          await resumeInsightMode(userResponse, properties);
+        } catch (error) {
+          console.error("Error in continueInterview:", error);
+        }
+      }
+      continueInterview();
+    }
+  }, [userResponse]);
 
   useEffect(() => {
     const handleFullScreenChange = () => {
@@ -127,13 +147,13 @@ const Interview = () => {
         </div>
       ) : (
         <>
-          <InterviewHeader exitFullScreen={exitFullScreen} layout={layout} setLayout={setLayout} />
+          <InterviewHeader submitBtnRef={submitBtnRef} exitFullScreen={exitFullScreen} layout={layout} setLayout={setLayout} queType={queType}/>
 
           <div className="relative flex-grow flex items-center justify-center">
             {userResponse.length <= 0 &&
-              <Stt setUserResponse={setUserResponse} />
+              <Stt code={code} setUserResponse={setUserResponse} submitBtnRef={submitBtnRef} />
             }
-            {layout === 1 && (
+            {layout === 1 && queType=='normal' &&(
               <>
                 <video
                   ref={interviewerRef}
@@ -150,7 +170,7 @@ const Interview = () => {
               </>
             )}
 
-            {layout === 2 && (
+            {layout === 2 && queType=='normal' && (
               <div className={`mt-[50px] w-full h-full flex ${isPC ? "flex-row" : "flex-col"}`}>
                 {/* Layout 2: Left-Right on PC, Top-Bottom on Mobile */}
                 <video
@@ -170,14 +190,14 @@ const Interview = () => {
 
             {queType === 'coding' && (
               <>
-                <CodingPlayground />
+                <CodingPlayground codingQue={codingQuestion} setCode={setCode} code={codingQuestion.funcTemplate}/>
                 <motion.div
                   initial={{ x: 200, opacity: 0 }} // Start from right (off-screen)
                   animate={{ x: 0, opacity: 1 }} // Animate to its final position
                   transition={{ type: "tween", duration: 0.5 }} // Smooth animation
                   className="absolute bottom-16 right-4 w-40 h-40 bg-black rounded-lg shadow-lg border-2 border-gray-700 overflow-hidden z-50"
                 >
-                  <video ref={interviewerRef} autoPlay className="w-full h-full object-cover"></video>
+                  <video muted ref={interviewerRef} autoPlay className="w-full h-full object-cover"></video>
                 </motion.div>
               </>
             )}
