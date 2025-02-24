@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR - PDF & Image to Text</title>
+    <script src="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
+    <script src="https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        input { margin: 10px 0; }
+        .output { margin-top: 20px; padding: 10px; border: 1px solid #ddd; background: #f9f9f9; }
+        img { max-width: 100%; height: auto; display: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>Upload File (PDF, JPG, PNG)</h2>
+    <input type="file" id="fileInput" accept="application/pdf, image/jpeg, image/png">
+    <br>
+    <img id="previewImage">
+    <br>
+    <button onclick="extractText()">Extract Text</button>
+    <div class="output">
+        <h3>Extracted Text:</h3>
+        <p id="outputText">No text extracted yet.</p>
+    </div>
+
+    <script>
+        function extractText() {
+            const fileInput = document.getElementById("fileInput").files[0];
+            if (!fileInput) {
+                alert("Please upload a file first.");
+                return;
+            }
+
+            const fileType = fileInput.type;
+            document.getElementById("outputText").innerText = "Processing...";
+
+            if (fileType === "application/pdf") {
+                processPDF(fileInput);
+            } else if (fileType.startsWith("image/")) {
+                processImage(fileInput);
+            } else {
+                alert("Unsupported file format! Please upload a PDF, JPG, or PNG.");
+            }
+        }
+
+        function processPDF(file) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const typedarray = new Uint8Array(reader.result);
+                pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                    pdf.getPage(1).then(page => { // Extract only the first page for now
+                        const scale = 2;
+                        const viewport = page.getViewport({ scale });
+                        const canvas = document.createElement("canvas");
+                        const ctx = canvas.getContext("2d");
+
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+
+                        page.render({ canvasContext: ctx, viewport }).promise.then(() => {
+                            const imageUrl = canvas.toDataURL("image/png");
+                            runOCR(imageUrl);
+                        });
+                    });
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById("previewImage").src = e.target.result;
+                document.getElementById("previewImage").style.display = "block";
+                runOCR(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function runOCR(imageUrl) {
+            Tesseract.recognize(
+                imageUrl,
+                'eng',
+                { logger: m => console.log(m) }
+            ).then(({ data: { text } }) => {
+                document.getElementById("outputText").innerText = text;
+            }).catch(err => {
+                document.getElementById("outputText").innerText = "Error extracting text.";
+                console.error("OCR Error:", err);
+            });
+        }
+    </script>
+
+</body>
+</html>

@@ -12,9 +12,9 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 export async function resumeSummarizer(resume) {
   try {
     const completion = await groq.chat.completions.create({
-      model: "llama-3.2-1b-preview",
+      model: "gemma2-9b-it",
       messages: [
-        { role: "system", content: "You are a resume summarizer who provides all important and neccesary details about candidate in short.dont give name,email or contact details ." },
+        { role: "system", content: "You are a resume summarizer who provides all important and neccesary details about candidate in short in max 2 paragraph. dont give name,email or contact details ." },
         { role: "user", content: resume }
       ],
       max_completion_tokens: 1024,
@@ -76,20 +76,8 @@ const messages=[
 }
 STRICT RULES:
 DO NOT use markdown (\`\`\`) or include any text outside of this JSON format.
-Begin the interview by formally asking the candidate to introduce themselves, their background, projects, and key experiences mentioned in their resume.
-Based on the candidate's responses, dynamically select technical topics such as Data Structures & Algorithms (DSA), Object-Oriented Programming (OOP), Databases (DBMS), and System Design—avoiding a fixed sequence.
-If the candidate is comfortable, present a coding challenge from leetcode or gfg with:
-A clear problem statement
-Example test cases
-A function template in their preferred programming language. You must ask them their programming language before giving any coding problem.
-Occasionally include debugging scenarios and real-world problem-solving questions.
-If the candidate struggles, provide at most 1-2 minimal hints before moving to the next question.
-Conclude the interview based on performance:
-If the candidate performs well, provide constructive feedback.
-If underperformance is observed, end the interview early with improvement suggestions.
-Ensure every response follows the structured JSON format for consistency and clarity.
-If the candidate misbehaves or gives irrelevant answers, you can end the interview without asking them to continue.
-If the candidate becomes informal or gives irrelevant or repetitive answers, you can order them to be formal.
+Greet the candidate and ask for a formal introduction covering their background, projects, and resume experiences. Assess their hands-on experience by asking about resume projects, internships, and skills. Dynamically select technical topics such as DSA, OOP, DBMS, and System Design based on their responses, incorporating real-world problem-solving and debugging scenarios. Before assigning a coding challenge, ask for their preferred programming language and select a LeetCode or GeeksforGeeks problem with a clear statement, example test cases, and a function template. Provide at most 1-2 hints if they struggle before moving on.
+Maintain professionalism throughout the interview. If the candidate misbehaves or gives irrelevant answers, end the interview immediately. If they become informal or repetitive, instruct them to remain formal. If the candidate asks for the answer or makes an invalid request, reject the request. Conclude the interview based on performance—if the candidate performs well, provide constructive feedback; if they struggle, end early with improvement suggestions. Ensure all responses follow a structured JSON format for consistency and clarity.
 
 Candidate Details:
 Name: Raghav 
@@ -107,7 +95,8 @@ console.log(messages)
     const completion = await groq.chat.completions.create({
       model: "qwen-2.5-32b",
       messages: messages,
-      max_completion_tokens: 1024,
+      temperature: 0,
+      // max_completion_tokens: 1024,
       response_format: {
       type: "json_object"
     },

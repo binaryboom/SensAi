@@ -47,7 +47,7 @@ const Stt = ({setUserResponse,code,submitBtnRef}) => {
 
     return (
         <div className=" mt-12">
-            <div className="fixed z-50 bottom-5 left-1/2 md:left-1/2 md:transform md:-translate-x-1/2">  
+            <div className="fixed z-50 bottom-5 right-5 md:left-1/2 md:transform md:-translate-x-1/2">  
             {/* og upar wala */}
             {/* <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2"> */}
                 {!listening ? (

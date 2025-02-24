@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 // import { Progress } from "@/components/ui/progress";
 import { Upload, FileText, Settings } from "lucide-react";
@@ -14,52 +14,136 @@ import Loader from "../ui/loader";
 import StartBtn from "../ui/StartBtn";
 import { useNavigate } from "react-router";
 
+
 const ResumeInsight = () => {
     const [fileName, setFileName] = useState("");
     const [difficulty, setDifficulty] = useState("Easy");
-    const [fileBase64, setFileBase64] = useState(""); // State to store Base64
     const [resume, setResume] = useState("");
-    const navigate=useNavigate()
-    const api=import.meta.env.VITE_BACKEND_API;
+    const navigate = useNavigate()
+    const api = import.meta.env.VITE_BACKEND_API;
+    useEffect(() => {
+        // Load PDF.js
+        const pdfScript = document.createElement("script");
+        // pdfScript.src = "https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.min.js";
+        pdfScript.src = "/libs/pdf.min.js";
+        pdfScript.onload = () => {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            // "https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js";
+            "/libs/pdf.worker.min.js";
+        };
+        document.body.appendChild(pdfScript);
+    
+        // Load Tesseract.js
+        const tesseractScript = document.createElement("script");
+        // tesseractScript.src = "https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js";
+        tesseractScript.src = "/libs/tesseract.min.js";
+        document.body.appendChild(tesseractScript);
+      }, []);
 
-    const handleFileChange = (event) => {
+    const handleFileChange = async (event) => {
         const file = event.target.files[0];
         if (file) {
             setFileName(file.name);
-            convertToBase64(file);
+           const text= await extractText(file);
+            console.log('extracted',text)
+            const response = await fetch(`${api}/summarize-text`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ resume :text }),
+            });
+
+            const data = await response.json();
+            setResume(data.message);
         } else {
             setFileName("");
-            setFileBase64(""); // Clear Base64 when no file is selected
+            setResume("") 
         }
     };
 
-    // Convert file to Base64
-    const convertToBase64 = (file) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file); // Read file as Data URL
-        reader.onload = async () => {
-            const base64=reader.result;
-            setFileBase64(base64); // Store Base64 string
-            // console.log("Base64:", base64); // Log Base64 output
-            const response = await fetch(`${api}/extract-text`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ base64 }),
-              });
-        
-              const data = await response.json();
-              setResume(data.message);
-            //   console.log(data.message);
-        };
-        reader.onerror = (error) => {
-            console.error("Error converting file to Base64:", error);
-        };
+    const extractText = async (file) => {
+        if (!file) {
+            alert("Please upload a file first.");
+            return;
+        }
+    
+        const fileType = file.type;
+    
+        if (fileType === "application/pdf") {
+            return await processPDF(file);
+        } else if (fileType.startsWith("image/")) {
+            return await processImage(file);
+        } else {
+            alert("Unsupported file format! Please upload a PDF, JPG, or PNG.");
+            return "Extraction failed";
+        }
     };
+    
+    const processPDF = async (pdfFile) => {
+        const reader = new FileReader();
+    
+        return new Promise((resolve, reject) => {
+            reader.onload = async () => {
+                try {
+                    const typedArray = new Uint8Array(reader.result);
+                    const pdf = await pdfjsLib.getDocument(typedArray).promise;
+                    const page = await pdf.getPage(1);
+                    const scale = 2;
+                    const viewport = page.getViewport({ scale });
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d");
+    
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+    
+                    await page.render({ canvasContext: ctx, viewport }).promise;
+                    const imageUrl = canvas.toDataURL("image/png");
+    
+                    const text = await runOCR(imageUrl);
+                    resolve(text);
+                } catch (error) {
+                    console.error("PDF Processing Error:", error);
+                    reject("Failed to process PDF");
+                }
+            };
+    
+            reader.readAsArrayBuffer(pdfFile);
+        });
+    };
+    
+    const processImage = async (imageFile) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const text = await runOCR(e.target.result);
+                    resolve(text);
+                } catch (error) {
+                    console.error("Image Processing Error:", error);
+                    reject("Failed to process image");
+                }
+            };
+            reader.readAsDataURL(imageFile);
+        });
+    };
+    
+    const runOCR = async (imageUrl) => {
+        try {
+            const { data: { text } } = await Tesseract.recognize(imageUrl, "eng", {
+                logger: (m) => console.log(m),
+            });
+            return text;
+        } catch (err) {
+            console.error("OCR Error:", err);
+            return "Error extracting text.";
+        }
+    };
+    
+   
 
     const handleStartInterview = () => {
-        navigate('/modes/compatibility-check',{ state: { name: "Raghav", level: difficulty ,mode:'Resume Insight',resume:resume } })
+        navigate('/modes/compatibility-check', { state: { name: "Raghav", level: difficulty, mode: 'Resume Insight', resume: resume } })
     };
 
     return (
@@ -116,7 +200,7 @@ const ResumeInsight = () => {
                         </Select>
                     </div>
 
-                    <StartBtn onClick={handleStartInterview} disabled={!fileName} text={'Start Interview'}/>
+                    <StartBtn onClick={handleStartInterview} disabled={!fileName} text={'Start Interview'} />
 
                 </div>
                 <Loader loading={false}></Loader>

@@ -29,12 +29,10 @@ app.get('/',(req,res)=>{
     })
 })
 
-app.post("/extract-text", async (req, res) => {
+app.post("/summarize-text", async (req, res) => {
     try {
-      const { base64 } = req.body; 
-      const data = await parseResume(base64); // Extract text from PDF
-      console.log(data)
-      const summary=await resumeSummarizer(data);
+      const { resume } = req.body; 
+      const summary=await resumeSummarizer(resume);
       // console.log(summary)
   
       res.json({ success:true,message: summary }); // Send extracted text to frontend

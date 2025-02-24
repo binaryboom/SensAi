@@ -20,7 +20,7 @@ const InterviewHeader = ({ exitFullScreen, layout, setLayout,queType ,submitBtnR
           {
             layout != 3 &&
             <button
-              onClick={() => setLayout((prev) => (prev % 3) + 1)}
+              onClick={() => setLayout((prev) => (prev % 2) + 1)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
             >
               <span className='hidden md:inline'>Change Layout </span>
