@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "../ui/button";
-// import { Progress } from "@/components/ui/progress";
 import { Upload, FileText, Settings } from "lucide-react";
 import {
     Select,
@@ -9,112 +8,87 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-// import {HashLoader} from 'react-spinners'
 import Loader from "../ui/loader";
 import StartBtn from "../ui/StartBtn";
 import { useNavigate } from "react-router";
+import * as pdfjsLib from "pdfjs-dist";
+import { createWorker } from "tesseract.js";
 
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs`;
 
 const ResumeInsight = () => {
     const [fileName, setFileName] = useState("");
     const [difficulty, setDifficulty] = useState("Easy");
     const [resume, setResume] = useState("");
-    const [loading,setLoading]=useState(false);
-    const navigate = useNavigate()
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
     const api = import.meta.env.VITE_BACKEND_API;
-    useEffect(() => {
-        // Load PDF.js
-        const pdfScript = document.createElement("script");
-        // pdfScript.src = "https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.min.js";
-        pdfScript.src = "/libs/pdf.min.js";
-        pdfScript.onload = () => {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-            // "https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js";
-            "/libs/pdf.worker.min.js";
-        };
-        document.body.appendChild(pdfScript);
-    
-        // Load Tesseract.js
-        const tesseractScript = document.createElement("script");
-        // tesseractScript.src = "https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js";
-        tesseractScript.src = "/libs/tesseract.min.js";
-        document.body.appendChild(tesseractScript);
-      }, []);
 
+    // Handle File Upload
     const handleFileChange = async (event) => {
         const file = event.target.files[0];
+        if (!file) {
+            setFileName("");
+            setResume("");
+            return;
+        }
+
         setLoading(true);
-        if (file) {
-            setFileName(file.name);
-           const text= await extractText(file);
-            console.log('extracted',text)
+        setFileName(file.name);
+
+        try {
+            const extractedText = await extractText(file);
+            console.log("Extracted Text:", extractedText);
+
+            // Send extracted text to backend for processing
             const response = await fetch(`${api}/summarize-text`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ resume :text }),
+                body: JSON.stringify({ resume: extractedText }),
             });
 
             const data = await response.json();
             setResume(data.message);
-        } else {
-            setFileName("");
-            setResume("") 
+        } catch (error) {
+            console.error("Error processing file:", error);
+            alert("Failed to process the file. Please try again.");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false)
     };
 
+    // Extract text from PDF or Image
     const extractText = async (file) => {
-        if (!file) {
-            alert("Please upload a file first.");
-            return;
-        }
-    
-        const fileType = file.type;
-    
-        if (fileType === "application/pdf") {
+        if (file.type === "application/pdf") {
             return await processPDF(file);
-        } else if (fileType.startsWith("image/")) {
+        } else if (file.type.startsWith("image/")) {
             return await processImage(file);
         } else {
-            alert("Unsupported file format! Please upload a PDF, JPG, or PNG.");
-            return "Extraction failed";
+            throw new Error("Unsupported file format! Please upload a PDF, JPG, or PNG.");
         }
     };
-    
+
+    // Process PDF and convert to image for OCR
     const processPDF = async (pdfFile) => {
-        const reader = new FileReader();
-    
-        return new Promise((resolve, reject) => {
-            reader.onload = async () => {
-                try {
-                    const typedArray = new Uint8Array(reader.result);
-                    const pdf = await pdfjsLib.getDocument(typedArray).promise;
-                    const page = await pdf.getPage(1);
-                    const scale = 2;
-                    const viewport = page.getViewport({ scale });
-                    const canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-    
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-    
-                    await page.render({ canvasContext: ctx, viewport }).promise;
-                    const imageUrl = canvas.toDataURL("image/png");
-    
-                    const text = await runOCR(imageUrl);
-                    resolve(text);
-                } catch (error) {
-                    console.error("PDF Processing Error:", error);
-                    reject("Failed to process PDF");
-                }
-            };
-    
-            reader.readAsArrayBuffer(pdfFile);
-        });
+        const pdf = await pdfjsLib.getDocument(await pdfFile.arrayBuffer()).promise;
+        const page = await pdf.getPage(1);
+        const scale = 2;
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const imageUrl = canvas.toDataURL("image/png");
+
+        return await runOCR(imageUrl);
     };
-    
+
+    // Process image file directly with OCR
     const processImage = async (imageFile) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -123,45 +97,48 @@ const ResumeInsight = () => {
                     const text = await runOCR(e.target.result);
                     resolve(text);
                 } catch (error) {
-                    console.error("Image Processing Error:", error);
                     reject("Failed to process image");
                 }
             };
+            reader.onerror = () => reject("Error reading image file");
             reader.readAsDataURL(imageFile);
         });
     };
-    
-    const runOCR = async (imageUrl) => {
+
+    // Run OCR on an image (either from PDF or uploaded image)
+    const runOCR = async (imageDataUrl) => {
         try {
-            const { data: { text } } = await Tesseract.recognize(imageUrl, "eng", {
-                logger: (m) => console.log(m),
-            });
+            const worker = await createWorker("eng"); // No load() required in v6
+            const { data: { text } } = await worker.recognize(imageDataUrl);
+            await worker.terminate();
             return text;
         } catch (err) {
             console.error("OCR Error:", err);
-            return "Error extracting text.";
+            throw new Error("Failed to extract text.");
         }
     };
-    
-   
 
+    // Navigate to Interview
     const handleStartInterview = () => {
-        navigate('/modes/compatibility-check', { state: { name: "Raghav", level: difficulty, mode: 'Resume Insight', resume: resume } })
+        navigate("/modes/compatibility-check", {
+            state: {
+                name: "Raghav",
+                level: difficulty,
+                mode: "Resume Insight",
+                resume: resume,
+            },
+        });
     };
 
     return (
         <section id="resume-insight" className="w-full py-12 md:py-24 bg-muted/50 pt-20 md:pt-32 scroll-mt-24">
             <div className="container mx-auto px-4 md:px-6">
-                {/* Title & Subtitle */}
-                <h2 className="text-5xl text-center font-bold mb-4 gradient-title">
-                    Resume Insight Interview
-                </h2>
+                <h2 className="text-5xl text-center font-bold mb-4 gradient-title">Resume Insight Interview</h2>
                 <p className="text-center text-lg text-gray-300 max-w-xl mx-auto mb-8">
                     Upload your resume and challenge yourself with AI-driven interview questions.
                 </p>
 
                 <div className="max-w-2xl mx-auto flex flex-col items-center gap-6 bg-background p-8 rounded-xl shadow-lg">
-                    {/* File Upload Input */}
                     <div className="flex gap-5 justify-between items-center w-full">
                         <div className="text-xl font-semibold text-[rgb(218,255,251)] flex items-center gap-2">
                             <FileText size={22} /> Resume:
@@ -169,10 +146,10 @@ const ResumeInsight = () => {
 
                         <label
                             htmlFor="resume-upload"
-                            className="cursor-pointer w-[200px] px-6 py-2 flex items-center justify-center gap-2 bg-white font-semibold text-black rounded-lg hover:bg-gray-200 transition md:whitespace-nowrap "
+                            className="cursor-pointer w-[200px] px-6 py-2 flex items-center justify-center gap-2 bg-white font-semibold text-black rounded-lg hover:bg-gray-200 transition md:whitespace-nowrap"
                         >
                             <Upload size={20} />
-                            {fileName ? 'Change Resume' : 'Upload Resume'}
+                            {fileName ? "Change Resume" : "Upload Resume"}
                         </label>
                         <input
                             id="resume-upload"
@@ -186,7 +163,6 @@ const ResumeInsight = () => {
                         {fileName && <p className="text-sm">{fileName}</p>}
                     </div>
 
-                    {/* Select Difficulty */}
                     <div className="flex gap-5 justify-between items-center w-full">
                         <div className="text-xl font-semibold text-[rgb(218,255,251)] flex items-center gap-2">
                             <Settings size={22} /> Choose Difficulty:
@@ -203,10 +179,9 @@ const ResumeInsight = () => {
                         </Select>
                     </div>
 
-                    <StartBtn onClick={handleStartInterview} disabled={!fileName} text={'Start Interview'} />
-
+                    <StartBtn onClick={handleStartInterview} disabled={!fileName} text={"Start Interview"} />
                 </div>
-                <Loader loading={loading}></Loader>
+                <Loader loading={loading} />
             </div>
         </section>
     );
