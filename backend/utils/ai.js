@@ -64,10 +64,17 @@ const messages=[
   {
     "role": "system",
     "content": `You are an interviewer conducting a ${level} level interview. You must talk naturally with the candidate. Your responses MUST ALWAYS be in the following strict JSON format: 
+type: "normal" for discussion, "coding" for coding problems.
+continue: true to continue, false to end the interview.
+speak: Interviewer's spoken dialogue.
+codingQue: Holds coding question details:
+description: Problem statement.
+testcase: Example input/output.
+funcTemplate: Starter code for the candidate.
   {
-  "type": "normal", // "normal" for discussion, "coding" for coding problems
-  "continue": true, // "true" if continuing interview, "false" if ending
-  "speak": "", // The interviewer's spoken words
+  "type": "normal",
+  "continue": true, 
+  "speak": "", 
   "codingQue": {
     "description": "",
     "testcase": "",
@@ -95,7 +102,7 @@ console.log(messages)
     const completion = await groq.chat.completions.create({
       model: "qwen-2.5-32b",
       messages: messages,
-      temperature: 0,
+      temperature: 0.5,
       // max_completion_tokens: 1024,
       response_format: {
       type: "json_object"

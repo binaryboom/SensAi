@@ -3,7 +3,7 @@ import { StarsIcon, SendToBack, PhoneMissed, SendHorizonal } from 'lucide-react'
 
 
 
-const InterviewHeader = ({ exitFullScreen, layout, setLayout,queType ,submitBtnRef}) => {
+const InterviewHeader = ({ exitFullScreen, layout, setLayout,queType}) => {
 
   return (
     <header className="fixed top-0 w-full border-b bg-background z-50">
@@ -18,7 +18,7 @@ const InterviewHeader = ({ exitFullScreen, layout, setLayout,queType ,submitBtnR
         <div className="flex items-center space-x-3">
           {/* Layout Change Button */}
           {
-            layout != 3 &&
+            layout != 3 && queType!='coding' &&
             <button
               onClick={() => setLayout((prev) => (prev % 2) + 1)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
@@ -28,17 +28,7 @@ const InterviewHeader = ({ exitFullScreen, layout, setLayout,queType ,submitBtnR
             </button>
           }
 
-          {/* Code Submit Button */}
-          {
-            queType=='coding' && 
-          <button ref={submitBtnRef}
-          // onClick={() => {}}
-          className="px-4 py-2 bg-green-700 text-white rounded-md hover:bg-green-800 transition"
-          >
-            <span className='hidden md:inline'>Submit</span>
-            <SendHorizonal className="w-5 h-5 md:ml-2 inline " />
-          </button>
-          }
+          
 
           {/* End Interview Button */}
           <button

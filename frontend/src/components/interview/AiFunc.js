@@ -32,13 +32,16 @@ export const resumeInsightMode = async (userInput = '', properties) => {
   if(data.type=='coding'){
     setCodingQuestion(data.codingQue)
     // setLayout(3);
+  }else{
+    setLayout(1);
   }
   speakQue(data.speak);
   setUserResponse("");
 
   setConversationHistory(prevHistory => [
       ...prevHistory,
-      { role: "assistant", content: data.speak }
+      { role: "assistant", content: data }
+      // { role: "assistant", content: data.speak }
   ]);
 };
 
@@ -48,13 +51,17 @@ export const speakQue = async (question, voiceName = "Microsoft Clara Online (Na
       const speech = new SpeechSynthesisUtterance(question);
   
       const voices = await getVoices();
-      const selectedVoice = voices.find((voice) => voice.name === voiceName);
-  
-      if (selectedVoice) {
-        speech.voice = selectedVoice;
-      } else {
-        console.warn(`Voice "${voiceName}" not found, using default.`);
+      // const selectedVoice = voices.find((voice) => voice.name === voiceName);
+      for(let v of voices){
+        // if()
+        console.log(v)
       }
+  
+      // if (selectedVoice) {
+      //   speech.voice = selectedVoice;
+      // } else {
+      //   console.warn(`Voice "${voiceName}" not found, using default.`);
+      // }
   
       speech.lang = "en-CA"; // Canadian English
       speech.rate = 1; // Speed of speech (1 = normal)

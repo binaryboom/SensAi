@@ -19,6 +19,7 @@ const ResumeInsight = () => {
     const [fileName, setFileName] = useState("");
     const [difficulty, setDifficulty] = useState("Easy");
     const [resume, setResume] = useState("");
+    const [loading,setLoading]=useState(false);
     const navigate = useNavigate()
     const api = import.meta.env.VITE_BACKEND_API;
     useEffect(() => {
@@ -42,6 +43,7 @@ const ResumeInsight = () => {
 
     const handleFileChange = async (event) => {
         const file = event.target.files[0];
+        setLoading(true);
         if (file) {
             setFileName(file.name);
            const text= await extractText(file);
@@ -60,6 +62,7 @@ const ResumeInsight = () => {
             setFileName("");
             setResume("") 
         }
+        setLoading(false)
     };
 
     const extractText = async (file) => {
@@ -203,7 +206,7 @@ const ResumeInsight = () => {
                     <StartBtn onClick={handleStartInterview} disabled={!fileName} text={'Start Interview'} />
 
                 </div>
-                <Loader loading={false}></Loader>
+                <Loader loading={loading}></Loader>
             </div>
         </section>
     );

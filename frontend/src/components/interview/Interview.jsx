@@ -22,11 +22,9 @@ const Interview = () => {
   const [conversationHistory, setConversationHistory] = useState([]);
   const [aiQuestion, setAiQuestion] = useState("");
   const [codingQuestion, setCodingQuestion] = useState("");
-  const [code, setCode] = useState("");
   const [queType, setQueType] = useState("normal");
   const [userResponse, setUserResponse] = useState("");
   const userData = location.state.userData;
-  const submitBtnRef=useRef();
 
   // console.log('interview', userData)
 
@@ -45,16 +43,7 @@ const Interview = () => {
     };
   }, []);
 
-  // useEffect(() => {
-  //   async function startInterview() {
-  //     try {
-  //       await resumeInsightMode(userResponse, properties);
-  //     } catch (error) {
-  //       console.error("Error in startInterview:", error);
-  //     }
-  //   }
-  //   startInterview()
-  // }, [userData,userResponse]);
+  
 
   useEffect(() => {
     // Run only when the page is opened (first render)
@@ -147,11 +136,11 @@ const Interview = () => {
         </div>
       ) : (
         <>
-          <InterviewHeader submitBtnRef={submitBtnRef} exitFullScreen={exitFullScreen} layout={layout} setLayout={setLayout} queType={queType}/>
+          <InterviewHeader  exitFullScreen={exitFullScreen} layout={layout} setLayout={setLayout} queType={queType}/>
 
           <div className="relative flex-grow flex items-center justify-center">
             {userResponse.length <= 0 &&
-              <Stt code={code} setUserResponse={setUserResponse} submitBtnRef={submitBtnRef} />
+              <Stt  setUserResponse={setUserResponse}  />
             }
             {layout === 1 && queType=='normal' &&(
               <>
@@ -176,13 +165,13 @@ const Interview = () => {
                 <video
                   ref={interviewerRef}
                   autoPlay
-
+                  muted
                   className={`${isPC ? "w-1/2 h-full border-r-2" : "w-full h-1/2 border-b-2"} border-gray-700 object-cover`}
                 ></video>
                 <video
                   ref={videoRef}
                   autoPlay
-
+                  muted
                   className={`${isPC ? "w-1/2 h-full" : "w-full h-1/2"} object-cover`}
                 ></video>
               </div>
@@ -190,7 +179,7 @@ const Interview = () => {
 
             {queType === 'coding' && (
               <>
-                <CodingPlayground codingQue={codingQuestion} setCode={setCode} code={codingQuestion.funcTemplate}/>
+                <CodingPlayground codingQue={codingQuestion}  setUserResponse={setUserResponse} />
                 <motion.div
                   initial={{ x: 200, opacity: 0 }} // Start from right (off-screen)
                   animate={{ x: 0, opacity: 1 }} // Animate to its final position
