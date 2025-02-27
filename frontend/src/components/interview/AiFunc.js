@@ -3,7 +3,7 @@ const api=import.meta.env.VITE_BACKEND_API;
 export const resumeInsightMode = async (userInput = '', properties) => {
   console.log('user input in ai func js', userInput);
 
-  const { userData, conversationHistory, setConversationHistory, setAiQuestion,setLayout, setQueType,setCodingQuestion, setUserResponse } = properties;
+  const { userData, conversationHistory, setConversationHistory, setAiQuestion,setLayout, setQueType,setCodingQuestion, setUserResponse ,changeVideo,female2 ,setAiSpeaking} = properties;
 
   // Append the latest user input to a new variable
   const updatedHistory = [
@@ -35,27 +35,31 @@ export const resumeInsightMode = async (userInput = '', properties) => {
   }else{
     setLayout(1);
   }
-  speakQue(data.speak);
+  // if (changeVideo) {
+  //   changeVideo(female2.speakingVideo); // Call the function when speech ends
+  // }
+  speakQue(data.speak,changeVideo,female2,setAiSpeaking);
   setUserResponse("");
 
   setConversationHistory(prevHistory => [
       ...prevHistory,
-      { role: "assistant", content: data }
+      { role: "assistant", content: raw.message }
       // { role: "assistant", content: data.speak }
   ]);
 };
 
 
-export const speakQue = async (question, voiceName = "Microsoft Clara Online (Natural) - English (Canada) (en-CA)") => {
+export const speakQue = async (question,changeVideo,character,setAiSpeaking) => {
     if ("speechSynthesis" in window) {
+      const synth = window.speechSynthesis;
       const speech = new SpeechSynthesisUtterance(question);
   
-      const voices = await getVoices();
-      // const selectedVoice = voices.find((voice) => voice.name === voiceName);
-      for(let v of voices){
-        // if()
-        console.log(v)
-      }
+      // const voices = await getVoices();
+      // // const selectedVoice = voices.find((voice) => voice.name === voiceName);
+      // for(let v of voices){
+      //   // if()
+      //   console.log(v)
+      // }
   
       // if (selectedVoice) {
       //   speech.voice = selectedVoice;
@@ -67,8 +71,41 @@ export const speakQue = async (question, voiceName = "Microsoft Clara Online (Na
       speech.rate = 1; // Speed of speech (1 = normal)
       speech.pitch = 1; // Pitch (1 = normal)
       speech.volume = 1; // Volume (1 = max)
+
+      speech.onstart = () => {
+        console.log("Speech started.");
+        setAiSpeaking(true)
+        // monitorSpeechState();
+      };
+      
+      speech.onend = () => {
+        console.log("Speech has ended.");
+        setAiSpeaking(false)
+        // clearInterval(monitorInterval); // Stop the loop
+        // if (changeVideo) {
+        //   changeVideo(character.listeningVideo); // Set final state after speech ends
+        // }
+      };
+      
+      let monitorInterval;
+      
+      function monitorSpeechState() {
+        monitorInterval = setInterval(() => {
+          if (synth.speaking && !synth.paused) {
+            console.log("Currently speaking...");
+            changeVideo(character.speakingVideo); // Show speaking animation
+          } 
+        }, 100); // Check every 100ms
+      }
   
-      window.speechSynthesis.speak(speech);
+      synth.speak(speech);
+      
+      // speech.onend=()=>{
+      //   console.log("Speech has ended.");
+      //   if (changeVideo) {
+      //     changeVideo(character.listeningVideo); // Call the function when speech ends
+      //   }
+      // }
     } else {
       console.error("Text-to-Speech not supported in this browser.");
     }

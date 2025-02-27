@@ -4,12 +4,10 @@ import StartBtn from "../ui/StartBtn";
 import { OctagonAlert } from 'lucide-react';
 import CodingPlayground from "./CodingPlayground";
 import { motion } from "framer-motion";
-import davidVideo from '/david-case.mp4'
 import { useLocation } from "react-router";
-import { resumeInsightMode, speakQue } from "./AiFunc";
+import { resumeInsightMode } from "./AiFunc";
 import Stt from "../utils/stt";
-
-
+import { female2 } from "./AiCharacters";
 
 const Interview = () => {
   const location = useLocation();
@@ -21,16 +19,36 @@ const Interview = () => {
   const [layout, setLayout] = useState(1); // Default Layout 1
   const [conversationHistory, setConversationHistory] = useState([]);
   const [aiQuestion, setAiQuestion] = useState("");
+  const [aiSpeaking, setAiSpeaking] = useState(true);
   const [codingQuestion, setCodingQuestion] = useState("");
   const [queType, setQueType] = useState("normal");
   const [userResponse, setUserResponse] = useState("");
   const userData = location.state.userData;
+  const aiSpeakingRef = useRef(false); // Track aiSpeaking dynamically
 
-  // console.log('interview', userData)
+  useEffect(() => {
+    aiSpeakingRef.current = aiSpeaking; // Update ref whenever aiSpeaking changes
+  }, [aiSpeaking]);
+
+  const changeVideo = (videoSrc) => {
+    try {
+      console.log("Changing video to:", videoSrc); // Debugging statement
+      if (interviewerRef.current) {
+        console.log("Interviewer ref found"); // Debugging statement
+        interviewerRef.current.src = videoSrc;
+        interviewerRef.current.load();
+        interviewerRef.current.play();
+      } else {
+        console.log("Interviewer ref not found"); // Debugging statement
+      }
+    } catch (error) {
+      console.error("Error changing video:", error);
+    }
+  };
 
   const properties = {
-   conversationHistory, setConversationHistory, setAiQuestion, userData, setQueType,setCodingQuestion, setUserResponse,setLayout
-  }
+    conversationHistory, setConversationHistory, setAiQuestion, userData, setQueType, setCodingQuestion, setUserResponse, setLayout, changeVideo, female2, setAiSpeaking
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -43,13 +61,14 @@ const Interview = () => {
     };
   }, []);
 
-  
-
   useEffect(() => {
     // Run only when the page is opened (first render)
     async function startInterview() {
       try {
-        console.log('calling start interview')
+        console.log('calling start interview');
+        if (interviewerRef.current) {
+          aiSpeaking ? changeVideo(female2.speakingVideo) : changeVideo(female2.listeningVideo);
+        }
         await resumeInsightMode(userResponse, properties);
       } catch (error) {
         console.error("Error in startInterview:", error);
@@ -57,13 +76,12 @@ const Interview = () => {
     }
     startInterview();
   }, []); // Empty dependency array = runs only once on mount
-  
+
   useEffect(() => {
     if (userResponse.length > 0) {
       async function continueInterview() {
         try {
-          console.log('calling continue interview')
-
+          console.log('calling continue interview');
           await resumeInsightMode(userResponse, properties);
         } catch (error) {
           console.error("Error in continueInterview:", error);
@@ -79,7 +97,7 @@ const Interview = () => {
     };
 
     document.addEventListener("fullscreenchange", handleFullScreenChange);
-    setTimeout(() => enterFullScreen(), 500);
+    setTimeout(() => enterFullScreen(changeVideo), 500);
 
     return () => {
       document.removeEventListener("fullscreenchange", handleFullScreenChange);
@@ -87,19 +105,48 @@ const Interview = () => {
   }, []);
 
   useEffect(() => {
+    if(queType=='normal')
     startWebcam();
-  }, [layout]);
+  }, [layout,queType]);
 
-  const enterFullScreen = async () => {
+  // Watch for changes in aiSpeaking and update video
+  useEffect(() => {
+    if (interviewerRef.current) {
+      aiSpeaking ? changeVideo(female2.speakingVideo) : changeVideo(female2.listeningVideo);
+    }
+  }, [aiSpeaking]);
+
+  // Watch for changes in layout and queType to ensure video is rendered
+  useEffect(() => {
+    if (layout === 1 && queType === 'normal' && interviewerRef.current) {
+      aiSpeaking ? changeVideo(female2.speakingVideo) : changeVideo(female2.listeningVideo);
+    }
+  }, [layout, queType]);
+
+  const enterFullScreen = async (changeVideo) => {
     if (containerRef.current.requestFullscreen) {
       try {
         await containerRef.current.requestFullscreen();
         startWebcam();
+        if (aiSpeakingRef.current) {
+          console.log('full screen event 1');
+          changeVideo(female2.speakingVideo);
+        } else {
+          console.log('full screen event 2');
+          changeVideo(female2.listeningVideo);
+        }
       } catch (err) {
         console.error("Error entering full screen:", err);
       }
     }
   };
+
+  useEffect(() => {
+    if (isFullScreen && interviewerRef.current) {
+      console.log('Restoring video after full-screen re-entry');
+      aiSpeakingRef.current ? changeVideo(female2.speakingVideo) : changeVideo(female2.listeningVideo);
+    }
+  }, [isFullScreen,layout]);
 
   const exitFullScreen = () => {
     if (document.fullscreenElement) {
@@ -114,57 +161,50 @@ const Interview = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-      if (interviewerRef.current) {
-        interviewerRef.current.src = davidVideo;
-        interviewerRef.current.load();
-        interviewerRef.current.play();
-      }
     } catch (error) {
       console.error("Error accessing webcam:", error);
     }
   };
 
-
   return (
-    <div ref={containerRef} className="h-screen w-full  bg-black/50 flex flex-col text-white">
+    <div ref={containerRef} className="h-screen w-full bg-black/50 flex flex-col text-white">
       <div className="grid-background" />
       {!isFullScreen ? (
         <div className="flex flex-col items-center justify-center h-full">
-          <h3 className="text-xl text-red-600  text-center font-semibold"> <OctagonAlert className="w-5 h-5 md:ml-2 inline" /> Warning: <br /> Full-Screen Mode Required</h3>
+          <h3 className="text-xl text-red-600 text-center font-semibold"> <OctagonAlert className="w-5 h-5 md:ml-2 inline" /> Warning: <br /> Full-Screen Mode Required</h3>
           <p className="text-md text-center mt-8">To proceed with the interview, <br /> please enable full-screen mode.</p>
-          <StartBtn onClick={enterFullScreen} text="Start Interview" />
+          <StartBtn onClick={() => { enterFullScreen(changeVideo) }} text="Start Interview" />
         </div>
       ) : (
         <>
-          <InterviewHeader  exitFullScreen={exitFullScreen} layout={layout} setLayout={setLayout} queType={queType}/>
+          <InterviewHeader exitFullScreen={exitFullScreen} layout={layout} setLayout={setLayout} queType={queType} />
 
           <div className="relative flex-grow flex items-center justify-center">
             {userResponse.length <= 0 &&
-              <Stt  setUserResponse={setUserResponse}  />
+              <Stt setUserResponse={setUserResponse} />
             }
-            {layout === 1 && queType=='normal' &&(
+            {layout === 1 && queType === 'normal' && (
               <>
                 <video
                   ref={interviewerRef}
                   autoPlay
+                  loop
                   muted={true}
-                  className="w-[90%] mt-8 h-[100%] border-2  border-gray-700 rounded-lg shadow-lg object-cover"
+                  className="w-[90%] mt-8 h-[100%] border-2 border-gray-700 rounded-lg shadow-lg object-cover"
                 ></video>
-                {/* w-[82%] h-[80%]  without mt-8*/}
 
                 <div className="absolute bottom-16 right-4 w-40 h-40 bg-black rounded-lg shadow-lg border-2 border-gray-700 overflow-hidden">
-                  <video muted={true} ref={videoRef} autoPlay className="w-full h-full object-cover"></video>
+                  <video muted={true} ref={videoRef} autoPlay className="w-full h-full scale-x-[-1] object-cover"></video>
                 </div>
-                {/* bottom-16 */}
               </>
             )}
 
-            {layout === 2 && queType=='normal' && (
+            {layout === 2 && queType === 'normal' && (
               <div className={`mt-[50px] w-full h-full flex ${isPC ? "flex-row" : "flex-col"}`}>
-                {/* Layout 2: Left-Right on PC, Top-Bottom on Mobile */}
                 <video
                   ref={interviewerRef}
                   autoPlay
+                  loop
                   muted
                   className={`${isPC ? "w-1/2 h-full border-r-2" : "w-full h-1/2 border-b-2"} border-gray-700 object-cover`}
                 ></video>
@@ -172,25 +212,24 @@ const Interview = () => {
                   ref={videoRef}
                   autoPlay
                   muted
-                  className={`${isPC ? "w-1/2 h-full" : "w-full h-1/2"} object-cover`}
+                  className={`${isPC ? "w-1/2 h-full" : "w-full h-1/2"} scale-x-[-1] object-cover`}
                 ></video>
               </div>
             )}
 
             {queType === 'coding' && (
               <>
-                <CodingPlayground codingQue={codingQuestion}  setUserResponse={setUserResponse} />
+                <CodingPlayground codingQue={codingQuestion} setUserResponse={setUserResponse} />
                 <motion.div
-                  initial={{ x: 200, opacity: 0 }} // Start from right (off-screen)
-                  animate={{ x: 0, opacity: 1 }} // Animate to its final position
-                  transition={{ type: "tween", duration: 0.5 }} // Smooth animation
+                  initial={{ x: 200, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ type: "tween", duration: 0.5 }}
                   className="absolute bottom-16 right-4 w-40 h-40 bg-black rounded-lg shadow-lg border-2 border-gray-700 overflow-hidden z-50"
                 >
-                  <video muted ref={interviewerRef} autoPlay className="w-full h-full object-cover"></video>
+                  <video loop muted ref={interviewerRef} autoPlay className="w-full h-full object-cover"></video>
                 </motion.div>
               </>
             )}
-
           </div>
         </>
       )}

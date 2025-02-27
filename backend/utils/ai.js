@@ -102,7 +102,7 @@ console.log(messages)
     const completion = await groq.chat.completions.create({
       model: "qwen-2.5-32b",
       messages: messages,
-      temperature: 0.5,
+      // temperature: 0.5,
       // max_completion_tokens: 1024,
       response_format: {
       type: "json_object"
