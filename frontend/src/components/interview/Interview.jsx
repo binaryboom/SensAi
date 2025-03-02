@@ -9,6 +9,57 @@ import { resumeInsightMode } from "./AiFunc";
 import Stt from "../utils/stt";
 import { female2 } from "./AiCharacters";
 
+// IndexedDB Utility Functions
+const DB_NAME = 'VideoDB';
+const STORE_NAME = 'videos';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+
+    request.onsuccess = (event) => {
+      resolve(event.target.result);
+    };
+
+    request.onerror = (event) => {
+      reject(event.target.error);
+    };
+  });
+}
+
+export function saveVideoToDB(key, videoBlob) {
+  return openDB().then((db) => {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.put(videoBlob, key);
+
+      request.onsuccess = () => resolve();
+      request.onerror = (event) => reject(event.target.error);
+    });
+  });
+}
+
+export function getVideoFromDB(key) {
+  return openDB().then((db) => {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(key);
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = (event) => reject(event.target.error);
+    });
+  });
+}
+
 const Interview = () => {
   const location = useLocation();
   const videoRef = useRef(null); // User video
@@ -30,16 +81,29 @@ const Interview = () => {
     aiSpeakingRef.current = aiSpeaking; // Update ref whenever aiSpeaking changes
   }, [aiSpeaking]);
 
-  const changeVideo = (videoSrc) => {
+  const changeVideo = async (videoSrc) => {
     try {
       console.log("Changing video to:", videoSrc); // Debugging statement
-      if (interviewerRef.current) {
-        console.log("Interviewer ref found"); // Debugging statement
-        interviewerRef.current.src = videoSrc;
+
+      // Check if the video is already in IndexedDB
+      const videoBlob = await getVideoFromDB(videoSrc);
+
+      if (videoBlob) {
+        // If the video is found in IndexedDB, use it
+        const videoURL = URL.createObjectURL(videoBlob);
+        interviewerRef.current.src = videoURL;
         interviewerRef.current.load();
         interviewerRef.current.play();
       } else {
-        console.log("Interviewer ref not found"); // Debugging statement
+        // If the video is not in IndexedDB, fetch it and store it
+        const response = await fetch(videoSrc);
+        const blob = await response.blob();
+        await saveVideoToDB(videoSrc, blob);
+
+        const videoURL = URL.createObjectURL(blob);
+        interviewerRef.current.src = videoURL;
+        interviewerRef.current.load();
+        interviewerRef.current.play();
       }
     } catch (error) {
       console.error("Error changing video:", error);
@@ -47,7 +111,17 @@ const Interview = () => {
   };
 
   const properties = {
-    conversationHistory, setConversationHistory, setAiQuestion, userData, setQueType, setCodingQuestion, setUserResponse, setLayout, changeVideo, female2, setAiSpeaking
+    conversationHistory,
+    setConversationHistory,
+    setAiQuestion,
+    userData,
+    setQueType,
+    setCodingQuestion,
+    setUserResponse,
+    setLayout,
+    changeVideo,
+    female2,
+    setAiSpeaking,
   };
 
   useEffect(() => {
@@ -105,9 +179,8 @@ const Interview = () => {
   }, []);
 
   useEffect(() => {
-    if(queType=='normal')
-    startWebcam();
-  }, [layout,queType]);
+    if (queType === 'normal') startWebcam();
+  }, [layout, queType]);
 
   // Watch for changes in aiSpeaking and update video
   useEffect(() => {
@@ -146,7 +219,7 @@ const Interview = () => {
       console.log('Restoring video after full-screen re-entry');
       aiSpeakingRef.current ? changeVideo(female2.speakingVideo) : changeVideo(female2.listeningVideo);
     }
-  }, [isFullScreen,layout]);
+  }, [isFullScreen, layout]);
 
   const exitFullScreen = () => {
     if (document.fullscreenElement) {
@@ -181,7 +254,7 @@ const Interview = () => {
 
           <div className="relative flex-grow flex items-center justify-center">
             {userResponse.length <= 0 &&
-              <Stt setUserResponse={setUserResponse} queType={queType}/>
+              <Stt setUserResponse={setUserResponse} queType={queType} />
             }
             {layout === 1 && queType === 'normal' && (
               <>
