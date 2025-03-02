@@ -154,7 +154,7 @@ const ResumeInsight = () => {
                         <input
                             id="resume-upload"
                             type="file"
-                            accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                            accept=".pdf,.png,.jpg,.jpeg"
                             className="hidden"
                             onChange={handleFileChange}
                         />

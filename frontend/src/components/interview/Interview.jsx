@@ -173,7 +173,7 @@ const Interview = () => {
         <div className="flex flex-col items-center justify-center h-full">
           <h3 className="text-xl text-red-600 text-center font-semibold"> <OctagonAlert className="w-5 h-5 md:ml-2 inline" /> Warning: <br /> Full-Screen Mode Required</h3>
           <p className="text-md text-center mt-8">To proceed with the interview, <br /> please enable full-screen mode.</p>
-          <StartBtn onClick={() => { enterFullScreen(changeVideo) }} text="Start Interview" />
+          <StartBtn onClick={() => { enterFullScreen(changeVideo) }} text="Continue Interview" />
         </div>
       ) : (
         <>
@@ -181,7 +181,7 @@ const Interview = () => {
 
           <div className="relative flex-grow flex items-center justify-center">
             {userResponse.length <= 0 &&
-              <Stt setUserResponse={setUserResponse} />
+              <Stt setUserResponse={setUserResponse} queType={queType}/>
             }
             {layout === 1 && queType === 'normal' && (
               <>

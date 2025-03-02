@@ -1,100 +1,121 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
-import { Mic, Mic2, MicOff, Podcast } from "lucide-react";
+import { BadgeAlert, Mic, MicOff, TriangleAlert } from "lucide-react";
 
-const Stt = ({ setUserResponse }) => {
+const Stt = ({ setUserResponse,queType }) => {
     const [listening, setListening] = useState(false);
     const [finalTranscript, setFinalTranscript] = useState("");
-    const [isPaused, setIsPaused] = useState(false); // Track if the mic is paused
+    const [isPaused, setIsPaused] = useState(false);
+    const [text, setText] = useState("");
 
-    // Initialize SpeechRecognition
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.continuous = true; // Keep listening even after pauses
-    recognition.interimResults = true; // Show interim results
-    recognition.lang = "en-US"; // Set language
+    const recognitionRef = useRef(null);
 
-    // Handle speech recognition results
-    recognition.onresult = (event) => {
-        let interimTranscript = "";
-
-        // Loop through the results
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-                // Append final transcript to the final output
-                setFinalTranscript((prev) => prev + transcript + " ");
-            } else {
-                interimTranscript += transcript;
-            }
+    useEffect(() => {
+        if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+            console.error("Speech recognition not supported in this browser.");
+            return;
         }
 
-        // Log interim and final transcripts
-        // console.log("Interim Transcript:", interimTranscript);
-        console.log("Final Transcript:", finalTranscript);
-    };
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
 
-    // Handle errors
-    recognition.onerror = (event) => {
-        console.log('on error 1')
-        console.error("Speech recognition error:", event.error);
-        setListening(false);
-        setIsPaused(true); // Set paused state on error
-        console.log('on error 2')
-    };
+        recognition.onresult = (event) => {
+            let interimTranscript = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    setFinalTranscript((prev) => prev + transcript + " ");
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            console.log("Final Transcript:", finalTranscript);
+        };
 
-    // Handle end of speech recognition
-    recognition.onend = () => {
-        console.log('on end 1')
-        setListening(false)
-        setIsPaused(true); // Set paused state when recognition ends
-        console.log('on end 2')
-    };
+        recognition.onerror = (event) => {
+            console.log("on error 1");
+            console.error("Speech recognition error:", event.error);
+            setListening(false);
+            setIsPaused(true);
+            console.log("on error 2");
+        };
 
-    // Start listening
-    const startListening = () => {
-        recognition.start();
-        console.log('listening started')
-        setListening(true);
-        setIsPaused(false); // Reset paused state
-    };
+        recognition.onend = () => {
+            console.log("on end 1");
+            setListening(false);
+            setIsPaused(true);
+            console.log("on end 2");
+        };
 
-    // Stop listening and send the final transcript
-    const handleStop = () => {
-        console.log('stop 1')
-        recognition.stop();
-        setListening(false);
-        setIsPaused(true); // Set paused state
-        setUserResponse(finalTranscript.trim()); // Send the final transcript to the parent component
-        console.log('stop 2')
-    };
+        recognitionRef.current = recognition;
 
-    // Resume listening from where it left off
-    const resumeListening = () => {
-        console.log('listening resumed 1')
-        recognition.start();
-        console.log('listening resumed 2')
-        setListening(true);
-        setIsPaused(false); // Reset paused state
-    };
-
-    // Cleanup on component unmount
-    useEffect(() => {
         return () => {
-            // console.log('unmount 1')
+            console.log("unmount 1");
             recognition.stop();
-            // console.log('unmount 2')
+            console.log("unmount 2");
         };
     }, []);
 
+    const startListening = () => {
+        if (!recognitionRef.current) return;
+        recognitionRef.current.start();
+        console.log("listening started");
+        setListening(true);
+        setIsPaused(false);
+    };
+
+    const stopListening = () => {
+        if (!recognitionRef.current) return;
+        console.log("stop 1");
+        recognitionRef.current.stop();
+        setListening(false);
+        setIsPaused(true);
+        console.log("stop 2");
+    };
+
+    const sendAnswer = () => {
+        stopListening();
+        setUserResponse(finalTranscript.trim());
+    };
+    const sendAns = () => {
+        setUserResponse(text)
+    }
+    const invalidAiResponse = () => {
+        setUserResponse(`-- MUST ENSURE-- 
+For **normal** discussions or questions, , **always** use "type": "normal" (never "coding").
+For **coding questions**, **always** use "type": "coding" (never "normal").`)
+    }
+
     return (
         <div className="mt-12">
+           {queType=='normal' && 
+           <Button className="fixed top-[100px] right-[7%] z-50  bg-red-600 text-white text-start rounded-md hover:bg-red-700 transition px-2 py-6" onClick={invalidAiResponse}>
+                <div className="flex flex-col items-start">
+                    <span className="flex items-center gap-1">
+                        Invalid <TriangleAlert className="ml-1 scale-115" />
+                    </span>
+                    <p>Response ?</p>
+                </div>
+            </Button>
+        } 
             <div className="fixed z-50 bottom-5 right-5 md:left-1/2 md:right-auto md:transform md:-translate-x-1/2">
+                <textarea
+                    className="w-full p-2 border rounded text-black"
+                    rows={4}
+                    placeholder="Type your answer..."
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                />
+                <Button className="mt-2 w-full mb-1" onClick={sendAns}>Submit Answer</Button>
+
                 {!listening && !isPaused ? (
-                    <Button onClick={startListening}><Mic/>Start Answering</Button>
+                    <Button onClick={startListening}><Mic /> Start Answering</Button>
                 ) : listening ? (
-                    <Button onClick={handleStop}><Mic/>Send Answer</Button>
-                ) : isPaused && (
-                    <Button onClick={resumeListening}><MicOff/> Paused</Button>
+                    <Button onClick={sendAnswer}><Mic /> Send Answer</Button>
+                ) : (
+                    <Button onClick={startListening}><MicOff /> Resume</Button>
                 )}
             </div>
         </div>
