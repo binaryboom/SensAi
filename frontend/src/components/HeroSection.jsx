@@ -35,9 +35,9 @@ const HeroSection = () => {
           <NavLink to='/interview-modes'>
             <Button size='lg' className='px-8'>Get Started</Button>
           </NavLink>
-          <NavLink to={'/dashboard'}>
+          {/* <NavLink to={'/dashboard'}>
             <Button size='lg' className='px-8' variant='outline'>Watch Demo</Button>
-          </NavLink>
+          </NavLink> */}
         </div>
 
 
