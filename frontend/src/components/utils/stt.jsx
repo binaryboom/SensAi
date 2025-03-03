@@ -84,8 +84,16 @@ const Stt = ({ setUserResponse,queType }) => {
     }
     const invalidAiResponse = () => {
         setUserResponse(`-- MUST ENSURE-- 
-For **normal** discussions or questions, , **always** use "type": "normal" (never "coding").
-For **coding questions**, **always** use "type": "coding" (never "normal").`)
+ONLY respond in the following format:
+{type: "", // "normal" for discussion or questions, "coding" for coding problems
+continue: "", // "true" if continuing interview, "false" if ending
+speak: "", // The interviewer's spoken words
+codingQue: { 
+    description: "", 
+    testcase: "",
+    funcTemplate: ""
+  }
+}`)
     }
 
     return (

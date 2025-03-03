@@ -255,7 +255,7 @@ const Interview = () => {
           <InterviewHeader exitFullScreen={exitFullScreen} layout={layout} setLayout={setLayout} queType={queType} />
 
           <div className="relative flex-grow flex items-center justify-center">
-            {userResponse.length <= 0 &&
+            {userResponse.length <= 0  &&
               <Stt setUserResponse={setUserResponse} queType={queType} />
             }
             {layout === 1 && queType === 'normal' && (

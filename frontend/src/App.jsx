@@ -19,7 +19,6 @@ import Interview from './components/interview/Interview'
 import CodingPlayground from './components/interview/CodingPlayground'
 import Stt from './components/utils/stt'
 import Thanks from './components/interview/thanks'
-import TestAlertDialog from './components/ui/testdialog'
 
 
 const App = () => {
@@ -45,7 +44,7 @@ const App = () => {
           <Route path='/thank-you' element={<Thanks />} />
           <Route path='/code' element={<CodingPlayground />} />
           <Route path='/stt' element={<Stt />} />
-          <Route path='/alert' element={<TestAlertDialog />} />
+          
         </Routes>
       </main>
       <Footer/>

@@ -61,6 +61,7 @@ ${resume}
     const completion = await groq.chat.completions.create({
       model: "qwen-2.5-32b",
       messages: messages,
+      temperature:1,
       tools: [
         {
           type: "function",
@@ -97,7 +98,7 @@ ${resume}
     let aiResponse = "";
     if (toolCall) {
       aiResponse = JSON.parse(toolCall.arguments);
-      aiResponse = JSON.stringify(aiResponse, null, 2);
+      aiResponse =await JSON.stringify(aiResponse, null, 2);
       console.log("AI Response:", aiResponse);
       return aiResponse;
     } else {
@@ -121,7 +122,7 @@ ${resume}
 
         const failedGeneration = error.error.error.failed_generation.match(/{[\s\S]*}/)[0];
         // const failedGeneration = JSON.parse(error.error.error.failed_generation.match(/{[\s\S]*}/)[0]);
-        // console.log(failedGeneration)
+        console.log(failedGeneration)
         return failedGeneration;
       } catch (parseError) {
         console.error("Error parsing failed_generation:", parseError);

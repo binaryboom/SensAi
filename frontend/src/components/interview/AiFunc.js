@@ -24,9 +24,9 @@ export const resumeInsightMode = async (userInput = '', properties) => {
   });
 
   const raw = await res.json();
-  const data = JSON.parse(raw.message);
-
-  console.log(data.type);
+  setUserResponse("");
+  const data= extractFields(raw.message);
+  console.log('extracted data',data);
   setQueType(data.type);
   setAiQuestion(data.speak);
   if(data.type=='coding'){
@@ -35,11 +35,9 @@ export const resumeInsightMode = async (userInput = '', properties) => {
   }else{
     setLayout(1);
   }
-  // if (changeVideo) {
-  //   changeVideo(female2.speakingVideo); // Call the function when speech ends
-  // }
+  
   speakQue(data.speak,changeVideo,female2,setAiSpeaking,data.continue,navigate);
-  setUserResponse("");
+ 
 
   setConversationHistory(prevHistory => [
       ...prevHistory,
@@ -75,41 +73,22 @@ export const speakQue = async (question,changeVideo,character,setAiSpeaking,cont
       speech.onstart = () => {
         console.log("Speech started.");
         setAiSpeaking(true)
-        // monitorSpeechState();
       };
       
       speech.onend = () => {
-        // const navigate=useNavigate();
+       
         console.log("Speech has ended.");
         setAiSpeaking(false)
         if(continueInterview==false){
           navigate('/thank-you')
         }
-        // clearInterval(monitorInterval); // Stop the loop
-        // if (changeVideo) {
-        //   changeVideo(character.listeningVideo); // Set final state after speech ends
-        // }
+        
       };
       
-      let monitorInterval;
       
-      function monitorSpeechState() {
-        monitorInterval = setInterval(() => {
-          if (synth.speaking && !synth.paused) {
-            console.log("Currently speaking...");
-            changeVideo(character.speakingVideo); // Show speaking animation
-          } 
-        }, 100); // Check every 100ms
-      }
-  
       synth.speak(speech);
       
-      // speech.onend=()=>{
-      //   console.log("Speech has ended.");
-      //   if (changeVideo) {
-      //     changeVideo(character.listeningVideo); // Call the function when speech ends
-      //   }
-      // }
+     
     } else {
       console.error("Text-to-Speech not supported in this browser.");
     }
@@ -128,4 +107,84 @@ export const speakQue = async (question,changeVideo,character,setAiSpeaking,cont
       };
     });
   };
-  
+ 
+
+
+
+
+
+
+  ////////////////////////////////// json functions///////////////////////////////////////////////////////
+
+  function extractFields(jsonString) {
+    let data;
+    try {
+        // Attempt to parse the JSON string
+        data = JSON.parse(jsonString);
+    } catch (e) {
+        // If parsing fails, use string-based search
+        console.log("JSON parsing failed, falling back to string-based search.");
+        return extractFieldsFromString(jsonString);
+    }
+
+    // If JSON parsing is successful, extract fields
+    const result = {
+        type: data.type || 'normal',
+        continue: data.continue==false? false : true,
+        speak: data.speak || 'Some error occured. Please use invalid response button.',
+        codingQue: {
+            description: data.codingQue?.description || 'na',
+            funcTemplate: data.codingQue?.funcTemplate || 'na',
+            testcase: data.codingQue?.testcase || 'na'
+        }
+    };
+
+    return result;
+}
+
+function extractFieldsFromString(jsonString) {
+    const result = {
+        type: "normal",
+        continue: "true",
+        speak: "Some error occured. Please use invalid response button.",
+        codingQue: {
+            description: 'na',
+            funcTemplate: 'na',
+            testcase: 'na'
+        }
+    };
+
+    // Regular expressions to extract values
+    const typeMatch = jsonString.match(/"type"\s*:\s*"([^"]+)"/);
+    const continueMatch = jsonString.match(/"continue"\s*:\s*(true|false)/);
+    const speakMatch = jsonString.match(/"speak"\s*:\s*"([^"]+)"/);
+    const descriptionMatch = jsonString.match(/"description"\s*:\s*"([^"]+)"/);
+    const funcTemplateMatch = jsonString.match(/"funcTemplate"\s*:\s*"([^"]+)"/);
+    const testcaseMatch = jsonString.match(/"testcase"\s*:\s*"([^"]+)"/);
+
+    // Assign extracted values
+    if (typeMatch) result.type = typeMatch[1];
+    if (continueMatch) result.continue = continueMatch[1] == 'true';
+    if (speakMatch) result.speak = speakMatch[1];
+    if (descriptionMatch) result.codingQue.description = descriptionMatch[1];
+    if (funcTemplateMatch) result.codingQue.funcTemplate = funcTemplateMatch[1];
+    if (testcaseMatch) result.codingQue.testcase = testcaseMatch[1];
+
+    return result;
+}
+
+// Example usage
+// const jsonString = `{
+//   "type": "normal",
+//   "continue": true,
+//   "speak": "Great choice, Raghav. For this coding challenge, I'll select a problem from LeetCode or GeeksforGeeks. Could you provide a solution to the problem below in PHP?"
+
+// "codingQued: {
+//   "description": "You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list. (Example problem from LeetCode)",
+//   "funcTemplate": "function addTwoNumbers($l1, $l2) {\\n    // Your code here\\n}",
+//   "testcase": "Example 1:\\nInput: l1 = [2,4,3], l2 = [5,6,4]\\nOutput: [7,0,8]\\nExplanation: 342 + 465 = 807.\\n\\nExample 2:\\nInput: l1 = [0], l2 = [0]\\nOutput: [0]\\n\\nExample 3:\\nInput: l1 = [9,9,9,9,9,9,9], l2 = [9,9,9,9]\\nOutput: [8,9,9,9,0,0,0,1]"
+// }
+// }`;
+
+// const extractedData = extractFields(jsonString);
+// console.log(extractedData);
