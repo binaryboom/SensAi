@@ -3,7 +3,7 @@ const api=import.meta.env.VITE_BACKEND_API;
 export const resumeInsightMode = async (userInput = '', properties) => {
   console.log('user input in ai func js', userInput);
 
-  const { userData, conversationHistory, setConversationHistory, setAiQuestion,setLayout, setQueType,setCodingQuestion, setUserResponse ,changeVideo,female2 ,setAiSpeaking} = properties;
+  const { userData, conversationHistory, setConversationHistory, setAiQuestion,setLayout, setQueType,setCodingQuestion, setUserResponse ,changeVideo,female2 ,setAiSpeaking,navigate} = properties;
 
   // Append the latest user input to a new variable
   const updatedHistory = [
@@ -38,7 +38,7 @@ export const resumeInsightMode = async (userInput = '', properties) => {
   // if (changeVideo) {
   //   changeVideo(female2.speakingVideo); // Call the function when speech ends
   // }
-  speakQue(data.speak,changeVideo,female2,setAiSpeaking);
+  speakQue(data.speak,changeVideo,female2,setAiSpeaking,data.continue,navigate);
   setUserResponse("");
 
   setConversationHistory(prevHistory => [
@@ -49,7 +49,7 @@ export const resumeInsightMode = async (userInput = '', properties) => {
 };
 
 
-export const speakQue = async (question,changeVideo,character,setAiSpeaking) => {
+export const speakQue = async (question,changeVideo,character,setAiSpeaking,continueInterview,navigate) => {
     if ("speechSynthesis" in window) {
       const synth = window.speechSynthesis;
       const speech = new SpeechSynthesisUtterance(question);
@@ -79,8 +79,12 @@ export const speakQue = async (question,changeVideo,character,setAiSpeaking) => 
       };
       
       speech.onend = () => {
+        // const navigate=useNavigate();
         console.log("Speech has ended.");
         setAiSpeaking(false)
+        if(continueInterview==false){
+          navigate('/thank-you')
+        }
         // clearInterval(monitorInterval); // Stop the loop
         // if (changeVideo) {
         //   changeVideo(character.listeningVideo); // Set final state after speech ends

@@ -4,7 +4,7 @@ import StartBtn from "../ui/StartBtn";
 import { OctagonAlert } from 'lucide-react';
 import CodingPlayground from "./CodingPlayground";
 import { motion } from "framer-motion";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { resumeInsightMode } from "./AiFunc";
 import Stt from "../utils/stt";
 import { female2 } from "./AiCharacters";
@@ -75,6 +75,7 @@ const Interview = () => {
   const [queType, setQueType] = useState("normal");
   const [userResponse, setUserResponse] = useState("");
   const userData = location.state.userData;
+  const navigate=useNavigate();
   const aiSpeakingRef = useRef(false); // Track aiSpeaking dynamically
 
   useEffect(() => {
@@ -122,6 +123,7 @@ const Interview = () => {
     changeVideo,
     female2,
     setAiSpeaking,
+    navigate
   };
 
   useEffect(() => {
