@@ -5,7 +5,7 @@ import { OctagonAlert } from 'lucide-react';
 import CodingPlayground from "./CodingPlayground";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router";
-import { resumeInsightMode } from "./AiFunc";
+import { handsOnMode, resumeInsightMode } from "./AiFunc";
 import Stt from "../utils/stt";
 import { female2 } from "./AiCharacters";
 
@@ -77,6 +77,7 @@ const Interview = () => {
   const userData = location.state.userData;
   const navigate=useNavigate();
   const aiSpeakingRef = useRef(false); // Track aiSpeaking dynamically
+  console.log('interview page',userData)
 
   useEffect(() => {
     aiSpeakingRef.current = aiSpeaking; // Update ref whenever aiSpeaking changes
@@ -145,7 +146,18 @@ const Interview = () => {
         if (interviewerRef.current) {
           aiSpeaking ? changeVideo(female2.speakingVideo) : changeVideo(female2.listeningVideo);
         }
-        await resumeInsightMode(userResponse, properties);
+        if(userData.mode=='Resume Insight'){
+          await resumeInsightMode(userResponse, properties);
+        }
+        else if(userData.mode=='Code Mastery'){
+
+        }
+        else if(userData.mode=='Culture Fit'){
+
+        }
+        else{
+          await handsOnMode(userResponse, properties);
+        }
       } catch (error) {
         console.error("Error in startInterview:", error);
       }
@@ -158,7 +170,19 @@ const Interview = () => {
       async function continueInterview() {
         try {
           console.log('calling continue interview');
-          await resumeInsightMode(userResponse, properties);
+          if(userData.mode=='Resume Insight'){
+            await resumeInsightMode(userResponse, properties);
+          }
+          else if(userData.mode=='Code Mastery'){
+  
+          }
+          else if(userData.mode=='Culture Fit'){
+  
+          }
+          else{
+            await handsOnMode(userResponse, properties);
+          }
+
         } catch (error) {
           console.error("Error in continueInterview:", error);
         }
@@ -180,9 +204,7 @@ const Interview = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (queType === 'normal') startWebcam();
-  }, [layout, queType]);
+  
 
   // Watch for changes in aiSpeaking and update video
   useEffect(() => {
@@ -193,6 +215,7 @@ const Interview = () => {
 
   // Watch for changes in layout and queType to ensure video is rendered
   useEffect(() => {
+    if (queType === 'normal') startWebcam();
     if (layout === 1 && queType === 'normal' && interviewerRef.current) {
       aiSpeaking ? changeVideo(female2.speakingVideo) : changeVideo(female2.listeningVideo);
     }

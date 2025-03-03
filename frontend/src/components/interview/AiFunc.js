@@ -1,6 +1,7 @@
 const api=import.meta.env.VITE_BACKEND_API;
 
 export const resumeInsightMode = async (userInput = '', properties) => {
+  console.log(' calling resume insight mode')
   console.log('user input in ai func js', userInput);
 
   const { userData, conversationHistory, setConversationHistory, setAiQuestion,setLayout, setQueType,setCodingQuestion, setUserResponse ,changeVideo,female2 ,setAiSpeaking,navigate} = properties;
@@ -47,6 +48,102 @@ export const resumeInsightMode = async (userInput = '', properties) => {
 };
 
 
+export const handsOnMode = async (userInput = '', properties) => {
+  console.log('calling hands on mode')
+  console.log('user input in ai func js', userInput);
+
+
+  const { userData, conversationHistory, setConversationHistory, setAiQuestion,setLayout, setQueType,setCodingQuestion, setUserResponse ,changeVideo,female2 ,setAiSpeaking,navigate} = properties;
+
+  // Append the latest user input to a new variable
+  const updatedHistory = [
+      ...conversationHistory,
+      { role: "user", content: userInput }
+  ];
+
+  setConversationHistory(updatedHistory); // Update state with new history
+
+  const res = await fetch(`${api}/hands-on`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+          level: userData.level,
+          conversationHistory: updatedHistory, // Use updated history
+      }),
+  });
+
+  const raw = await res.json();
+  setUserResponse("");
+  const data= extractFields(raw.message);
+  console.log('extracted data',data);
+  setQueType(data.type);
+  setAiQuestion(data.speak);
+  if(data.type=='coding'){
+    setCodingQuestion(data.codingQue)
+    // setLayout(3);
+  }else{
+    setLayout(1);
+  }
+  
+  speakQue(data.speak,changeVideo,female2,setAiSpeaking,data.continue,navigate);
+ 
+
+  setConversationHistory(prevHistory => [
+      ...prevHistory,
+      { role: "assistant", content: raw.message }
+  ]);
+};
+
+
+export const codeMasteryMode = async (userInput = '', properties) => {
+  console.log('calling code mastery mode')
+  console.log('user input in ai func js', userInput);
+
+
+  const { userData, conversationHistory, setConversationHistory, setAiQuestion,setLayout, setQueType,setCodingQuestion, setUserResponse ,changeVideo,female2 ,setAiSpeaking,navigate} = properties;
+
+  // Append the latest user input to a new variable
+  const updatedHistory = [
+      ...conversationHistory,
+      { role: "user", content: userInput }
+  ];
+
+  setConversationHistory(updatedHistory); // Update state with new history
+
+  const res = await fetch(`${api}/code-mastery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+          skills:userData.skills,
+          level: userData.level,
+          conversationHistory: updatedHistory, // Use updated history
+      }),
+  });
+
+  const raw = await res.json();
+  setUserResponse("");
+  const data= extractFields(raw.message);
+  console.log('extracted data',data);
+  setQueType(data.type);
+  setAiQuestion(data.speak);
+  if(data.type=='coding'){
+    setCodingQuestion(data.codingQue)
+    // setLayout(3);
+  }else{
+    setLayout(1);
+  }
+  
+  speakQue(data.speak,changeVideo,female2,setAiSpeaking,data.continue,navigate);
+ 
+
+  setConversationHistory(prevHistory => [
+      ...prevHistory,
+      { role: "assistant", content: raw.message }
+  ]);
+};
+
+
+//////////////////////////// ai speak func ////////////////
 export const speakQue = async (question,changeVideo,character,setAiSpeaking,continueInterview,navigate) => {
     if ("speechSynthesis" in window) {
       const synth = window.speechSynthesis;

@@ -35,26 +35,26 @@ const Stt = ({ setUserResponse,queType }) => {
         };
 
         recognition.onerror = (event) => {
-            console.log("on error 1");
+            // console.log("on error 1");
             console.error("Speech recognition error:", event.error);
             setListening(false);
             setIsPaused(true);
-            console.log("on error 2");
+            // console.log("on error 2");
         };
 
         recognition.onend = () => {
-            console.log("on end 1");
+            // console.log("on end 1");
             setListening(false);
             setIsPaused(true);
-            console.log("on end 2");
+            // console.log("on end 2");
         };
 
         recognitionRef.current = recognition;
 
         return () => {
-            console.log("unmount 1");
+            // console.log("unmount 1");
             recognition.stop();
-            console.log("unmount 2");
+            // console.log("unmount 2");
         };
     }, []);
 
@@ -68,11 +68,11 @@ const Stt = ({ setUserResponse,queType }) => {
 
     const stopListening = () => {
         if (!recognitionRef.current) return;
-        console.log("stop 1");
+        // console.log("stop 1");
         recognitionRef.current.stop();
         setListening(false);
         setIsPaused(true);
-        console.log("stop 2");
+        // console.log("stop 2");
     };
 
     const sendAnswer = () => {

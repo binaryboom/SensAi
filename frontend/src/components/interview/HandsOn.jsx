@@ -16,7 +16,13 @@ const HandsOn = () => {
   const navigate=useNavigate()
 
   const handleStartInterview = () => {
-    navigate('/modes/compatibility-check')
+    navigate("/modes/compatibility-check", {
+      state: {
+          name: "Raghav",
+          level: difficulty,
+          mode: "Hands On",
+      },
+  });
   };
 
   return (

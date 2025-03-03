@@ -3,7 +3,7 @@ import cors from "cors"
 import dotenv from 'dotenv'
 import connectDB from "./utils/db.js";
 import parseResume from "./utils/ocr.js";
-import {resumeSummarizer,resumeInsightMode} from "./utils/ai.js";
+import {resumeSummarizer,resumeInsightMode, handsOnMode} from "./utils/ai.js";
 
 dotenv.config({})
 
@@ -33,8 +33,6 @@ app.post("/summarize-text", async (req, res) => {
     try {
       const { resume } = req.body; 
       const summary=await resumeSummarizer(resume);
-      // console.log(summary)
-  
       res.json({ success:true,message: summary }); // Send extracted text to frontend
     } catch (error) {
       res.status(500).json({ error: "Failed to extract text" });
@@ -45,8 +43,16 @@ app.post('/resume-insight', async (req, res) => {
   try {
     const {resume, conversationHistory, level}=req.body;
     const summary=await resumeInsightMode(resume, conversationHistory, level);
-    // console.log(resume)
+    res.json({ success:true,message: summary }); // Send extracted text to frontend
+  } catch (error) {
+    res.status(500).json({ error: "Failed to extract text" });
+  }
+});
 
+app.post('/hands-on', async (req, res) => {
+  try {
+    const { conversationHistory, level}=req.body;
+    const summary=await handsOnMode(conversationHistory, level);
     res.json({ success:true,message: summary }); // Send extracted text to frontend
   } catch (error) {
     res.status(500).json({ error: "Failed to extract text" });
