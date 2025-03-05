@@ -5,7 +5,7 @@ import { OctagonAlert } from 'lucide-react';
 import CodingPlayground from "./CodingPlayground";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router";
-import { handsOnMode, resumeInsightMode } from "./AiFunc";
+import { codeMasteryMode, handsOnMode, resumeInsightMode } from "./AiFunc";
 import Stt from "../utils/stt";
 import { female2 } from "./AiCharacters";
 
@@ -150,7 +150,7 @@ const Interview = () => {
           await resumeInsightMode(userResponse, properties);
         }
         else if(userData.mode=='Code Mastery'){
-
+          await codeMasteryMode(userResponse, properties);
         }
         else if(userData.mode=='Culture Fit'){
 
@@ -174,7 +174,7 @@ const Interview = () => {
             await resumeInsightMode(userResponse, properties);
           }
           else if(userData.mode=='Code Mastery'){
-  
+            await codeMasteryMode(userResponse, properties);
           }
           else if(userData.mode=='Culture Fit'){
   

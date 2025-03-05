@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Editor from "@monaco-editor/react";
 import {
   ResizableHandle,
@@ -13,7 +13,9 @@ import { Button } from "../ui/button";
 
 const CodingPlayground = ({ codingQue, setUserResponse }) => {
   const [code, setCode] = useState(codingQue?.funcTemplate || "");
-
+  useEffect(() => {
+    setCode(codingQue?.funcTemplate || ""); // Update code when funcTemplate changes
+  }, [codingQue?.funcTemplate]);
   const description = codingQue?.description;
   const testcase = codingQue?.testcase;
   const handleSubmit = () => {

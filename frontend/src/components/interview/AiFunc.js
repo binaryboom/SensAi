@@ -138,7 +138,7 @@ export const codeMasteryMode = async (userInput = '', properties) => {
 
   setConversationHistory(prevHistory => [
       ...prevHistory,
-      { role: "assistant", content: raw.message }
+      { role: "assistant", content: JSON.stringify(raw.message) }
   ]);
 };
 
@@ -182,7 +182,7 @@ export const speakQue = async (question,changeVideo,character,setAiSpeaking,cont
         
       };
       
-      
+      synth.cancel();
       synth.speak(speech);
       
      
@@ -217,6 +217,9 @@ export const speakQue = async (question,changeVideo,character,setAiSpeaking,cont
     let data;
     try {
         // Attempt to parse the JSON string
+        if(typeof jsonString=='object'){
+          return jsonString
+        }
         data = JSON.parse(jsonString);
     } catch (e) {
         // If parsing fails, use string-based search

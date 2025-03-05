@@ -48,8 +48,14 @@ const CodeMastery = () => {
 
   const handleStartInterview = () => {
     if (skills.length === 0) return; // Prevent starting without skills
-    // Start interview logic here
-    navigate('/modes/compatibility-check')
+    navigate("/modes/compatibility-check", {
+      state: {
+          name: "Raghav",
+          level: difficulty,
+          mode: "Code Mastery",
+          skills
+      },
+  });
   };
 
   return (
